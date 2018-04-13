@@ -7,12 +7,13 @@ import * as React from "react"
 import { render } from "react-dom"
 import styled, { injectGlobal, css } from "styled-components"
 import { Token, tokenize } from "./tokenize"
+import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
 
 const WIDTH = 400
 const HEIGHT = 300
 
 const editorBox = css`
-  position: fixed;
+  position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
@@ -30,9 +31,27 @@ const CodeUnderlay = styled.div`
   ${editorBox};
 `
 
+const PageWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+`
+const EditorWrapper = styled.div`
+  position: relative;
+  width: ${WIDTH}px;
+  height: ${HEIGHT}px;
+  max-width: ${WIDTH}px;
+  max-height: ${HEIGHT}px;
+`
+
 injectGlobal`
   * {
     box-sizing: border-box;
+  }
+  html, #main, body {
+    height: 100%;
   }
   body {
     padding: 0;
@@ -237,14 +256,32 @@ function renderCode(
 
 class TextBox extends React.Component<
   { text: string },
-  { text: string; selectionStart: number; selectionEnd: number }
+  {
+    text: string
+    selectionStart: number
+    selectionEnd: number
+    pretty: boolean
+  }
 > {
-  state = { text: this.props.text, selectionStart: 1, selectionEnd: 3 }
+  state = {
+    text: this.props.text,
+    selectionStart: 0,
+    selectionEnd: 0,
+    pretty: true,
+  }
+
+  timeout = null as NodeJS.Timer | null
 
   setNewText = (ev: React.FormEvent<HTMLTextAreaElement>) => {
     const text = ev.currentTarget.value
-    this.setState({ text })
+    this.setState({ text, pretty: false })
     this.handleSelectionChange()
+    if (this.timeout) {
+      clearTimeout(this.timeout)
+    }
+    this.timeout = setTimeout(() => {
+      this.setState({ pretty: true })
+    }, 800)
   }
 
   textArea: HTMLTextAreaElement | null = null
@@ -268,39 +305,42 @@ class TextBox extends React.Component<
   }
 
   render() {
-    const { text, selectionStart, selectionEnd } = this.state
+    const { text, selectionStart, selectionEnd, pretty } = this.state
 
     const selectionMin = Math.min(selectionStart, selectionEnd)
     const selectionMax = Math.max(selectionStart, selectionEnd)
 
     return (
-      <>
-        <CodeUnderlay
-          innerRef={ref => (this.codeOverlay = ref)}
-          style={{
-            whiteSpace: "pre-wrap",
-            pointerEvents: "none",
-            width: WIDTH + "px",
-            height: HEIGHT + "px",
-          }}
-        >
-          {renderCode(text, tokenize(text), selectionMin, selectionMax)}
-        </CodeUnderlay>
-        <textarea
-          onInput={this.setNewText}
-          defaultValue={text}
-          ref={ref => {
-            this.textArea = ref
-            if (this.textArea) {
-              this.textArea.onscroll = () => {
-                if (this.codeOverlay && this.textArea) {
-                  this.codeOverlay.scrollTop = this.textArea.scrollTop
+      <PageWrapper>
+        <PrettierActivitiyIndicator dirty={!pretty} />
+        <EditorWrapper>
+          <CodeUnderlay
+            innerRef={ref => (this.codeOverlay = ref)}
+            style={{
+              whiteSpace: "pre-wrap",
+              pointerEvents: "none",
+              width: WIDTH + "px",
+              height: HEIGHT + "px",
+            }}
+          >
+            {renderCode(text, tokenize(text), selectionMin, selectionMax)}
+          </CodeUnderlay>
+          <textarea
+            onInput={this.setNewText}
+            defaultValue={text}
+            ref={ref => {
+              this.textArea = ref
+              if (this.textArea) {
+                this.textArea.onscroll = () => {
+                  if (this.codeOverlay && this.textArea) {
+                    this.codeOverlay.scrollTop = this.textArea.scrollTop
+                  }
                 }
               }
-            }
-          }}
-        />
-      </>
+            }}
+          />
+        </EditorWrapper>
+      </PageWrapper>
     )
   }
 }
