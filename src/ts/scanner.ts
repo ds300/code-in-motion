@@ -1,3 +1,7 @@
+// The code in this file is derived from Microsoft/TypeScript
+// https://github.com/Microsoft/TypeScript
+// The original license is at ./LICENSE.txt relative to this file
+
 import {
   DiagnosticMessage,
   SyntaxKind,
@@ -3285,11 +3289,7 @@ function scanShebangTrivia(text: string, pos: number) {
   return pos
 }
 
-
-function isIdentifierStart(
-  ch: number,
-  languageVersion: ScriptTarget,
-): boolean {
+function isIdentifierStart(ch: number, languageVersion: ScriptTarget): boolean {
   return (
     (ch >= CharacterCodes.A && ch <= CharacterCodes.Z) ||
     (ch >= CharacterCodes.a && ch <= CharacterCodes.z) ||
@@ -3300,10 +3300,7 @@ function isIdentifierStart(
   )
 }
 
-function isIdentifierPart(
-  ch: number,
-  languageVersion: ScriptTarget,
-): boolean {
+function isIdentifierPart(ch: number, languageVersion: ScriptTarget): boolean {
   return (
     (ch >= CharacterCodes.A && ch <= CharacterCodes.Z) ||
     (ch >= CharacterCodes.a && ch <= CharacterCodes.z) ||

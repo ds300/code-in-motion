@@ -1,3 +1,7 @@
+// The code in this file is derived from Microsoft/TypeScript
+// https://github.com/Microsoft/TypeScript
+// The original license is at ./LICENSE.txt relative to this file
+
 export enum DiagnosticCategory {
   Warning,
   Error,
