@@ -26,6 +26,8 @@ const editorBox = css`
   background: rgb(27, 43, 53);
   padding: 13px 20px;
   margin: 0;
+  font-family: "Fira Code", "Menlo", "Source Code Pro", "Monaco", "Consolas",
+    monospace;
 `
 
 const CodeUnderlay = styled.div`
@@ -62,8 +64,8 @@ injectGlobal`
     -moz-osx-font-smoothing: grayscale;
     padding: 0;
     margin: 0;
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
     color: rgb(192, 206, 216);
-    font-family: "Fira Code", "Menlo", "Source Sans Pro", monospace;
     line-height: 1.4em;
     font-size: 16px;
     background: #1a1d21;
@@ -76,7 +78,6 @@ injectGlobal`
     opacity: 0;
     border: 0;
     outline: 0;
-    font-family: "Fira Code", "Menlo", "Source Sans Pro", monospace;
     line-height: 1.4em;
     font-size: 16px;
     border-radius: 0;
