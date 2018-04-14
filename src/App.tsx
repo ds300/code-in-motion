@@ -4,7 +4,6 @@
 // the original text, and then map everything else
 
 import * as React from "react"
-import { render } from "react-dom"
 import styled, { injectGlobal } from "styled-components"
 import { Button } from "./Button"
 import { GithubMark } from "./GithubMark"
@@ -22,7 +21,7 @@ injectGlobal`
   * {
     box-sizing: border-box;
   }
-  html, #main, body {
+  html, #root, body {
     height: 100%;
   }
   body {
@@ -110,7 +109,7 @@ const text = `function* banana() {
 }
 `
 
-const App = () => (
+export const App = () => (
   <PageWrapper>
     <h1>Prettier Prettier</h1>
     <Editor text={text} />
@@ -119,5 +118,3 @@ const App = () => (
     </Button>
   </PageWrapper>
 )
-
-render(<App />, document.getElementById("main"))
