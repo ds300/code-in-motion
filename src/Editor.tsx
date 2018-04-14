@@ -140,6 +140,22 @@ export class Editor extends React.Component<
           </CodeUnderlay>
           <TextArea
             onInput={this.setNewText}
+            onKeyDown={ev => {
+              if (ev.key === "Tab" && this.textArea) {
+                ev.preventDefault()
+                const startPos = this.textArea.selectionStart
+                const endPos = this.textArea.selectionEnd
+
+                const newText =
+                  this.textArea.value.slice(0, startPos) +
+                  "  " +
+                  this.textArea.value.slice(endPos)
+                this.textArea.value = newText
+                this.textArea.selectionStart = startPos + 2
+                this.textArea.selectionEnd = startPos + 2
+                this.setNewText(ev)
+              }
+            }}
             defaultValue={text}
             innerRef={ref => {
               this.textArea = ref
