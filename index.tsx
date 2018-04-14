@@ -8,6 +8,7 @@ import { render } from "react-dom"
 import styled, { injectGlobal, css } from "styled-components"
 import { Token, tokenize } from "./tokenize"
 import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
+import { Button } from "./Button"
 
 const WIDTH = 400
 const HEIGHT = 300
@@ -29,6 +30,8 @@ const editorBox = css`
 
 const CodeUnderlay = styled.div`
   ${editorBox};
+  border-radius: 5px;
+  box-shadow: 0 3px 6px 2px rgba(0, 0, 0, 0.1);
 `
 
 const PageWrapper = styled.div`
@@ -44,6 +47,7 @@ const EditorWrapper = styled.div`
   height: ${HEIGHT}px;
   max-width: ${WIDTH}px;
   max-height: ${HEIGHT}px;
+  margin-bottom: 50px;
 `
 
 injectGlobal`
@@ -54,13 +58,18 @@ injectGlobal`
     height: 100%;
   }
   body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     padding: 0;
     margin: 0;
-    color: rgb(249,252,254);
+    color: rgb(192, 206, 216);
     font-family: "Fira Code", "Menlo", "Source Sans Pro", monospace;
     line-height: 1.4em;
     font-size: 16px;
     background: #1a1d21;
+  }
+  h1 {
+    margin-bottom: 50px;
   }
   textarea {
     ${editorBox};
@@ -312,6 +321,7 @@ class TextBox extends React.Component<
 
     return (
       <PageWrapper>
+        <h1>Prettier Prettier</h1>
         <PrettierActivitiyIndicator dirty={!pretty} />
         <EditorWrapper>
           <CodeUnderlay
@@ -340,6 +350,9 @@ class TextBox extends React.Component<
             }}
           />
         </EditorWrapper>
+        <Button href="https://github.com/ds300/prettier-thing">
+          Ogle my innards on GitHub
+        </Button>
       </PageWrapper>
     )
   }
