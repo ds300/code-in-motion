@@ -10,6 +10,8 @@ export const Button = styled.a`
   font-size: 16px;
   transition: border-color 0.2s ease-out;
   text-decoration: none;
+  font-weight: 200;
+  letter-spacing: 0.9px;
   :hover {
     border: 1px solid #9ba0a7;
   }
