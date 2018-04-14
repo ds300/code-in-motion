@@ -5,7 +5,7 @@
 
 import * as React from "react"
 import { render } from "react-dom"
-import styled, { injectGlobal, css } from "styled-components"
+import styled, { injectGlobal } from "styled-components"
 import { Button } from "./Button"
 import { GithubMark } from "./GithubMark"
 import { Editor } from "./Editor"
