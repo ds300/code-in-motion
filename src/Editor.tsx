@@ -51,9 +51,14 @@ const EditorWrapper = styled.div`
 const ActivityIndicatorWrapper = styled.div`
   display: flex;
   flex-direction: row;
-  /* margin-bottom: 1px; */
   width: 100%;
-  /* padding-left: 14px; */
+`
+
+const ActivityIndicatorInnerWrapper = styled.div`
+  background: rgb(27, 43, 53);
+  display: inline-block;
+  line-height: 0px;
+  padding: 8px;
 `
 
 const TextArea = styled.textarea`
@@ -125,7 +130,9 @@ export class Editor extends React.Component<
     return (
       <EditorWrapper>
         <ActivityIndicatorWrapper>
-          <PrettierActivitiyIndicator dirty={!pretty} />
+          <ActivityIndicatorInnerWrapper>
+            <PrettierActivitiyIndicator dirty={!pretty} />
+          </ActivityIndicatorInnerWrapper>
         </ActivityIndicatorWrapper>
         <EditorBoxWrapper>
           <CodeUnderlay innerRef={ref => (this.codeOverlay = ref)}>

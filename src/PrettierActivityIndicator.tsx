@@ -3,7 +3,6 @@ import { injectGlobal } from "styled-components"
 
 injectGlobal`
   #activity-indicator {
-    background: rgb(27, 43, 53);
     g {
       transition: transform 0.24s ease-in-out;
     }
