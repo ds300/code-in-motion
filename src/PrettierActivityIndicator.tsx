@@ -19,6 +19,7 @@ interface State {
   offsets: number[]
 }
 
+const secondaryLineColor = "hsl(214, 12%, 43%)"
 export class PrettierActivitiyIndicator extends React.PureComponent<
   Props,
   State
@@ -76,7 +77,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(82 36)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle"
               />
               <rect
@@ -84,7 +85,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(67 36)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_2"
               />
               <rect
@@ -92,7 +93,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(93 36)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_3"
               />
               <rect
@@ -100,7 +101,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(41 36)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_4"
               />
               <rect
@@ -108,7 +109,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(10 36)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_5"
               />
               <rect
@@ -116,7 +117,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(0 36)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_6"
               />
               <rect
@@ -124,7 +125,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(23 36)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_7"
               />
               <rect
@@ -132,7 +133,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(108 36)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_8"
               />
               <rect
@@ -150,7 +151,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(26 30)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_10"
               />
               <rect
@@ -158,7 +159,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(77 30)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_11"
               />
               <rect
@@ -166,7 +167,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(83 30)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_12"
               />
               <rect
@@ -174,7 +175,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(67 30)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_13"
               />
               <rect
@@ -182,7 +183,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(102 30)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_14"
               />
               <rect
@@ -190,7 +191,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(122 30)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_15"
               />
               <rect
@@ -198,7 +199,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(34 30)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_16"
               />
               <rect
@@ -206,7 +207,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(0 30)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_17"
               />
               <rect
@@ -232,7 +233,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(93 24)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_20"
               />
               <rect
@@ -240,7 +241,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(44 24)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_21"
               />
               <rect
@@ -248,7 +249,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(72 24)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_22"
               />
               <rect
@@ -256,7 +257,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(104 24)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_23"
               />
               <rect
@@ -264,7 +265,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(116 24)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_24"
               />
               <rect
@@ -272,7 +273,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(21 24)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_25"
               />
               <rect
@@ -280,7 +281,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(0 24)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_26"
               />
             </g>
@@ -298,7 +299,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(100 18)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_28"
               />
               <rect
@@ -306,7 +307,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(111 18)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_29"
               />
               <rect
@@ -314,7 +315,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="1.5"
                 transform="translate(126 18)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_30"
               />
               <rect
@@ -322,7 +323,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(85 18)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_31"
               />
               <rect
@@ -330,7 +331,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(34 18)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_32"
               />
               <rect
@@ -338,7 +339,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(8 18)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_33"
               />
               <rect
@@ -346,7 +347,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(0 18)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_34"
               />
               <rect
@@ -372,7 +373,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(63 12)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_37"
               />
               <rect
@@ -380,7 +381,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(32 12)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_38"
               />
               <rect
@@ -388,7 +389,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(17 12)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_39"
               />
               <rect
@@ -396,7 +397,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(0 12)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_40"
               />
               <rect
@@ -404,7 +405,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(87 12)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_41"
               />
               <rect
@@ -412,7 +413,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(100 12)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_42"
               />
               <rect
@@ -446,7 +447,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(95 6)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_46"
               />
               <rect
@@ -454,7 +455,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(113 6)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_47"
               />
               <rect
@@ -462,7 +463,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(122 6)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_48"
               />
               <rect
@@ -470,7 +471,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(86 6)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_49"
               />
               <rect
@@ -478,7 +479,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(24 6)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_50"
               />
               <rect
@@ -486,7 +487,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(15 6)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_51"
               />
               <rect
@@ -494,7 +495,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(0 6)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_52"
               />
               <rect
@@ -502,7 +503,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(42 6)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_53"
               />
             </g>
@@ -520,7 +521,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(96)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_55"
               />
               <rect
@@ -528,7 +529,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(78)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_56"
               />
               <rect
@@ -536,7 +537,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(105)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_57"
               />
               <rect
@@ -544,14 +545,14 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
                 height="4"
                 rx="2"
                 transform="translate(33)"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_58"
               />
               <rect
                 width="31"
                 height="4"
                 rx="2"
-                fill="#434F5F"
+                fill={secondaryLineColor}
                 id="Rectangle_59"
               />
             </g>
