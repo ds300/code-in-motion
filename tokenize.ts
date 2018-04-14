@@ -1,4 +1,5 @@
-import * as ts from "typescript"
+import { createScanner } from "./ts/scanner"
+import { ScriptTarget, LanguageVariant, SyntaxKind } from "./ts/types"
 
 export interface Token {
   type:
@@ -17,15 +18,15 @@ export interface Token {
 }
 
 export function tokenize(code: string): Token[] {
-  const scanner = ts.createScanner(
-    ts.ScriptTarget.Latest,
+  const scanner = createScanner(
+    ScriptTarget.Latest,
     false,
-    ts.LanguageVariant.JSX,
+    LanguageVariant.JSX,
     code,
   )
   const tokens: Token[] = []
   scanner.scan()
-  while (scanner.getToken() !== ts.SyntaxKind.EndOfFileToken) {
+  while (scanner.getToken() !== SyntaxKind.EndOfFileToken) {
     const value = scanner.getTokenText()
     const start = scanner.getStartPos()
     const end = start + value.length
@@ -38,15 +39,15 @@ export function tokenize(code: string): Token[] {
       tokens.push({ type: "error", value, start, end })
     } else {
       switch (scanner.getToken()) {
-        case ts.SyntaxKind.JSDocComment:
-        case ts.SyntaxKind.MultiLineCommentTrivia:
-        case ts.SyntaxKind.SingleLineCommentTrivia:
+        case SyntaxKind.JSDocComment:
+        case SyntaxKind.MultiLineCommentTrivia:
+        case SyntaxKind.SingleLineCommentTrivia:
           tokens.push({ type: "comment", value, start, end })
           break
-        case ts.SyntaxKind.StringLiteral:
+        case SyntaxKind.StringLiteral:
           tokens.push({ type: "string", value, start, end })
           break
-        case ts.SyntaxKind.NumericLiteral:
+        case SyntaxKind.NumericLiteral:
           tokens.push({ type: "number", value, start, end })
           break
         default:
