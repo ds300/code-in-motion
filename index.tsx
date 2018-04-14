@@ -9,6 +9,7 @@ import styled, { injectGlobal, css } from "styled-components"
 import { Token, tokenize } from "./tokenize"
 import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
 import { Button } from "./Button"
+import { GithubMark } from "./GithubMark"
 
 const WIDTH = 400
 const HEIGHT = 300
@@ -71,7 +72,10 @@ injectGlobal`
     background: #1a1d21;
   }
   h1 {
-    margin-bottom: 50px;
+    margin-bottom: 40px;
+    font-size: 35px;
+    font-style: italic;
+    font-weight: 700;
   }
   textarea {
     ${editorBox};
@@ -323,36 +327,38 @@ class TextBox extends React.Component<
     return (
       <PageWrapper>
         <h1>Prettier Prettier</h1>
-        <PrettierActivitiyIndicator dirty={!pretty} />
-        <EditorWrapper>
-          <CodeUnderlay
-            innerRef={ref => (this.codeOverlay = ref)}
-            style={{
-              whiteSpace: "pre-wrap",
-              pointerEvents: "none",
-              width: WIDTH + "px",
-              height: HEIGHT + "px",
-            }}
-          >
-            {renderCode(text, tokenize(text), selectionMin, selectionMax)}
-          </CodeUnderlay>
-          <textarea
-            onInput={this.setNewText}
-            defaultValue={text}
-            ref={ref => {
-              this.textArea = ref
-              if (this.textArea) {
-                this.textArea.onscroll = () => {
-                  if (this.codeOverlay && this.textArea) {
-                    this.codeOverlay.scrollTop = this.textArea.scrollTop
+        <div>
+          <PrettierActivitiyIndicator dirty={!pretty} />
+          <EditorWrapper>
+            <CodeUnderlay
+              innerRef={ref => (this.codeOverlay = ref)}
+              style={{
+                whiteSpace: "pre-wrap",
+                pointerEvents: "none",
+                width: WIDTH + "px",
+                height: HEIGHT + "px",
+              }}
+            >
+              {renderCode(text, tokenize(text), selectionMin, selectionMax)}
+            </CodeUnderlay>
+            <textarea
+              onInput={this.setNewText}
+              defaultValue={text}
+              ref={ref => {
+                this.textArea = ref
+                if (this.textArea) {
+                  this.textArea.onscroll = () => {
+                    if (this.codeOverlay && this.textArea) {
+                      this.codeOverlay.scrollTop = this.textArea.scrollTop
+                    }
                   }
                 }
-              }
-            }}
-          />
-        </EditorWrapper>
+              }}
+            />
+          </EditorWrapper>
+        </div>
         <Button href="https://github.com/ds300/prettier-thing">
-          Ogle my innards on GitHub
+          Ogle my innards on GitHub <GithubMark />
         </Button>
       </PageWrapper>
     )
