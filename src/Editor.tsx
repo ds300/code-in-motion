@@ -7,6 +7,14 @@ import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
 const WIDTH = 400
 const HEIGHT = 300
 
+var worker = new Worker("/worker.js")
+
+worker.onmessage = function(message) {
+  console.log(message)
+}
+
+worker.postMessage({ text: "", options: {} })
+
 const editorBox = css`
   position: absolute;
   left: 50%;
