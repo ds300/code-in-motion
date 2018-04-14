@@ -80,25 +80,25 @@ injectGlobal`
     }
   }
   .function {
-    color: hsla(53, 71%, 80%);
+    color: hsl(53, 71%, 85%);
   }
   .punctuation {
-    color: rgb(161, 177, 185);
+    color: hsl(203, 20%, 75%);
   }
   .reserved {
-    color: rgb(191, 132, 191);
+    color: hsl(300, 55%, 71%);
   }
   .string {
     color: hsl(43, 76%, 49%);
   }
   .name {
-    color: rgb(165, 227, 228);
+    color: hsl(181, 84%, 84%);
   }
   .number {
-    color: rgb(119, 186, 230);
+    color: hsl(9, 49%, 53%);
   }
   .comment {
-    color: #579249;
+    color: hsl(92, 45%, 46%);
   }
 `
 

@@ -3,6 +3,7 @@ import * as React from "react"
 import styled, { css } from "styled-components"
 import { Token, tokenize } from "./tokenize"
 import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
+import * as colors from "./colors"
 
 const WIDTH = 400
 const HEIGHT = 300
@@ -25,12 +26,13 @@ const editorBox = css`
   max-width: ${WIDTH}px;
   max-height: ${HEIGHT}px;
   overflow: scroll;
-  background: rgb(27, 43, 53);
+  background: ${colors.editorBackground};
   padding: 20px 20px;
   margin: 0;
   white-space: pre-wrap;
   font-family: "Fira Code", "Menlo", "Source Code Pro", "Monaco", "Consolas",
     monospace;
+  font-weight: 500;
 `
 
 const EditorBoxWrapper = styled.div`
@@ -63,7 +65,7 @@ const ActivityIndicatorWrapper = styled.div`
 `
 
 const ActivityIndicatorInnerWrapper = styled.div`
-  background: rgb(27, 43, 53);
+  background: ${colors.editorBackground};
   display: inline-block;
   line-height: 0px;
   padding: 8px;
