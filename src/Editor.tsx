@@ -6,8 +6,9 @@ import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
 import * as colors from "./colors"
 import { formatCode } from "./prettierWorker"
 
-const WIDTH = 400
+const WIDTH = 500
 const HEIGHT = 300
+const H_PADDING = 20
 
 const editorBox = css`
   position: absolute;
@@ -20,7 +21,7 @@ const editorBox = css`
   max-height: ${HEIGHT}px;
   overflow: scroll;
   background: ${colors.editorBackground};
-  padding: 20px 20px;
+  padding: 20px ${H_PADDING}px;
   margin: 0;
   white-space: pre-wrap;
   font-family: "Fira Code", "Menlo", "Source Code Pro", "Monaco", "Consolas",
@@ -108,6 +109,7 @@ export class Editor extends React.Component<
           const { formatted } = await formatCode(
             text,
             this.textArea.selectionStart,
+            this.getPrintWidth(),
           )
           this.setState({ pretty: formatted === text })
         } catch {}
@@ -116,7 +118,7 @@ export class Editor extends React.Component<
   }
 
   textArea: HTMLTextAreaElement | null = null
-  codeOverlay: HTMLDivElement | null = null
+  codeUnderlay: HTMLDivElement | null = null
 
   handleSelectionChange = () => {
     if (this.textArea) {
@@ -127,6 +129,30 @@ export class Editor extends React.Component<
     }
   }
 
+  getPrintWidth = () => {
+    if (!this.codeUnderlay) {
+      return 50
+    }
+
+    const elem = this.codeUnderlay.children[0]
+
+    if (!elem) {
+      return 50
+    }
+
+    if (!elem.textContent) {
+      console.error("child element has no text content")
+      return 50
+    }
+
+    const textAreaWidth = WIDTH - 2 * H_PADDING
+
+    const charWidth =
+      elem.getBoundingClientRect().width / elem.textContent.length
+
+    return Math.floor(textAreaWidth / charWidth)
+  }
+
   handleSave = async (ev: KeyboardEvent) => {
     if (ev.key === "s" && ev.metaKey && this.textArea) {
       ev.preventDefault()
@@ -135,6 +161,7 @@ export class Editor extends React.Component<
         const { formatted, cursorOffset } = await formatCode(
           text,
           this.textArea.selectionStart,
+          this.getPrintWidth(),
         )
         this.textArea.value = formatted
         this.textArea.selectionStart = this.textArea.selectionEnd = cursorOffset
@@ -169,7 +196,7 @@ export class Editor extends React.Component<
           </ActivityIndicatorInnerWrapper>
         </ActivityIndicatorWrapper>
         <EditorBoxWrapper>
-          <CodeUnderlay innerRef={ref => (this.codeOverlay = ref)}>
+          <CodeUnderlay innerRef={ref => (this.codeUnderlay = ref)}>
             {renderCode(text, tokenize(text), selectionMin, selectionMax)}
           </CodeUnderlay>
           <TextArea
@@ -195,8 +222,8 @@ export class Editor extends React.Component<
               this.textArea = ref
               if (this.textArea) {
                 this.textArea.onscroll = () => {
-                  if (this.codeOverlay && this.textArea) {
-                    this.codeOverlay.scrollTop = this.textArea.scrollTop
+                  if (this.codeUnderlay && this.textArea) {
+                    this.codeUnderlay.scrollTop = this.textArea.scrollTop
                   }
                 }
               }

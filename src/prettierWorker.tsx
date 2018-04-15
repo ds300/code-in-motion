@@ -18,7 +18,11 @@ interface Failure {
 
 type Response = Result | Failure
 
-export function formatCode(code: string, cursorOffset: number) {
+export function formatCode(
+  code: string,
+  cursorOffset: number,
+  printWidth: number,
+) {
   return new Promise<Result>((resolve, reject) => {
     worker.onmessage = message => {
       const response: Response = message.data
@@ -37,7 +41,7 @@ export function formatCode(code: string, cursorOffset: number) {
         parser: "typescript",
         cursorOffset,
         semi: false,
-        printWidth: 38,
+        printWidth,
         trailingComma: "all",
       },
     })
