@@ -38,6 +38,7 @@ export function formatCode(code: string, cursorOffset: number) {
         cursorOffset,
         semi: false,
         printWidth: 38,
+        trailingComma: "all",
       },
     })
   })

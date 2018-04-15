@@ -99,7 +99,7 @@ injectGlobal`
     color: hsl(300, 55%, 71%);
   }
   .string {
-    color: hsl(43, 76%, 49%);
+    color: hsl(32, 76%, 49%);
   }
   .name {
     color: hsl(181, 84%, 84%);
@@ -112,11 +112,13 @@ injectGlobal`
   }
 `
 
-const text = `function* banana() {
-  yield banana();
-  hahaha what() ?
-  " this string is unfinished
-}
+const text = `const instructions = [
+  "Type some code",
+  "Delete some code",
+  "Just fuck my shit up fam",
+  "Then hit cmd + s",
+  "to make it pretty again",
+]
 `
 
 export const App = () => (
