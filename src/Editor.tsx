@@ -1,10 +1,12 @@
 import * as React from "react"
 
 import styled, { css } from "styled-components"
-import { Token, tokenize } from "./tokenize"
+import { tokenize } from "./tokenize"
 import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
 import * as colors from "./colors"
 import { formatCode } from "./prettierWorker"
+import { renderCode, renderSpan, Span } from "./renderCode"
+import { longestCommonSubsequence } from "./longestCommonSubsequence"
 
 const WIDTH = 500
 const HEIGHT = 300
@@ -43,6 +45,10 @@ const CodeUnderlay = styled.div`
   ${editorBox};
   pointer-events: none;
   box-shadow: 0 3px 6px 2px rgba(0, 0, 0, 0.1);
+  span {
+    display: inline-block;
+    white-space: pre;
+  }
 `
 
 const EditorWrapper = styled.div`
@@ -74,6 +80,13 @@ const TextArea = styled.textarea`
   font-size: 16px;
   border-radius: 0;
 `
+
+interface Rect {
+  top: number
+  left: number
+  width: number
+  height: number
+}
 
 export class Editor extends React.Component<
   { text: string },
@@ -153,8 +166,73 @@ export class Editor extends React.Component<
     return Math.floor(textAreaWidth / charWidth)
   }
 
+  flipState: {
+    oldSpans: Span[]
+    newSpans: Span[]
+    sharedSpans: Span[]
+    boundingBoxes: Rect[]
+  } | null = null
+
+  componentDidUpdate() {
+    if (this.flipState && this.codeUnderlay) {
+      console.log("fuck?", this.flipState)
+      const {
+        oldSpans,
+        newSpans,
+        sharedSpans,
+        boundingBoxes: oldBoundingBoxes,
+      } = this.flipState
+      this.flipState = null
+
+      const newBoundingBoxes = new Array(this.codeUnderlay.children.length)
+
+      for (let i = 0; i < newBoundingBoxes.length; i++) {
+        newBoundingBoxes[i] = this.codeUnderlay.children[
+          i
+        ].getBoundingClientRect()
+      }
+
+      let i = 0
+      let j = 0
+      let k = 0
+      while (
+        i < newSpans.length &&
+        j < sharedSpans.length &&
+        k < oldSpans.length
+      ) {
+        while (newSpans[i].text !== sharedSpans[j].text) {
+          i++
+        }
+        while (oldSpans[k].text !== sharedSpans[j].text) {
+          k++
+        }
+        // get diff
+        const { top, left } = diffBoundingBoxes(
+          oldBoundingBoxes[k],
+          newBoundingBoxes[i],
+        )
+
+        const child = this.codeUnderlay.children[j]
+        child.style.transform = `translate(${left}px, ${top}px)`
+
+        setTimeout(() => {
+          child.style.transition = "transform 0.14s ease-out"
+          child.style.transform = "translate(0px, 0px)"
+          setTimeout(() => {
+            child.style.transition = ""
+          }, 140)
+        }, 16)
+        console.log(
+          "mother fucking up in here",
+          `translate(${left}px, ${top}px)`,
+        )
+        j++
+      }
+    }
+  }
+
   handleSave = async (ev: KeyboardEvent) => {
-    if (ev.key === "s" && ev.metaKey && this.textArea) {
+    if (ev.key === "s" && ev.metaKey && this.textArea && this.codeUnderlay) {
       ev.preventDefault()
       try {
         const text = this.textArea.value
@@ -163,8 +241,40 @@ export class Editor extends React.Component<
           this.textArea.selectionStart,
           this.getPrintWidth(),
         )
+
+        const oldSpans = renderCode(
+          this.state.text,
+          tokenize(this.state.text),
+          this.textArea.selectionStart,
+          this.textArea.selectionEnd,
+        )
+
         this.textArea.value = formatted
         this.textArea.selectionStart = this.textArea.selectionEnd = cursorOffset
+
+        const newSpans = renderCode(
+          formatted,
+          tokenize(formatted),
+          this.textArea.selectionStart,
+          this.textArea.selectionEnd,
+        )
+
+        const sharedSpans = longestCommonSubsequence(oldSpans, newSpans)
+
+        const boundingBoxes = new Array(this.codeUnderlay.children.length)
+
+        for (let i = 0; i < boundingBoxes.length; i++) {
+          boundingBoxes[i] = this.codeUnderlay.children[
+            i
+          ].getBoundingClientRect()
+        }
+
+        this.flipState = {
+          oldSpans,
+          newSpans,
+          sharedSpans,
+          boundingBoxes,
+        }
 
         this.setState({ pretty: true, text: formatted })
         this.handleSelectionChange()
@@ -197,7 +307,9 @@ export class Editor extends React.Component<
         </ActivityIndicatorWrapper>
         <EditorBoxWrapper>
           <CodeUnderlay innerRef={ref => (this.codeUnderlay = ref)}>
-            {renderCode(text, tokenize(text), selectionMin, selectionMax)}
+            {renderCode(text, tokenize(text), selectionMin, selectionMax).map(
+              renderSpan,
+            )}
           </CodeUnderlay>
           <TextArea
             onInput={this.setNewText}
@@ -235,116 +347,11 @@ export class Editor extends React.Component<
   }
 }
 
-let key = 0
-
-const cursor = () => (
-  <span className="cursor" key={key++}>
-    &nbsp;
-  </span>
-)
-
-function rangesOverlap(
-  startA: number,
-  endA: number,
-  startB: number,
-  endB: number,
-) {
-  return !(
-    (startA <= startB && endA <= startB) ||
-    (startB <= startA && endB <= startA)
-  )
-}
-
-function renderCode(
-  text: string,
-  tokens: Token[],
-  selectionStart: number,
-  selectionEnd: number,
-) {
-  const spans = [] as any
-
-  tokens.forEach((token: Token, i, tokens) => {
-    let type = token.type as Token["type"] | "function"
-    switch (type) {
-      case "name":
-        if (tokens[i + 1] && tokens[i + 1].value === "(") {
-          type = "function"
-        }
-    }
-
-    if (!rangesOverlap(token.start, token.end, selectionStart, selectionEnd)) {
-      if (selectionStart === selectionEnd && selectionStart === token.start) {
-        spans.push(cursor())
-      }
-      spans.push(
-        <span key={key++} className={type}>
-          {token.value}
-        </span>,
-      )
-    } else {
-      if (selectionStart >= token.start && selectionEnd >= token.end) {
-        // starts during this token
-        if (selectionStart !== token.start) {
-          spans.push(
-            <span key={key++} className={type}>
-              {text.slice(token.start, selectionStart)}
-            </span>,
-          )
-        }
-        spans.push(
-          <span key={key++} className={type + " selection"}>
-            {text.slice(selectionStart, token.end)}
-          </span>,
-        )
-      } else if (selectionStart <= token.start && selectionEnd < token.end) {
-        // ends during this token
-        spans.push(
-          <span key={key++} className={type + " selection"}>
-            {text.slice(token.start, selectionEnd)}
-          </span>,
-        )
-        if (token.end !== selectionEnd) {
-          spans.push(
-            <span key={key++} className={type}>
-              {text.slice(selectionEnd, token.end)}
-            </span>,
-          )
-        }
-      } else if (selectionStart > token.start && selectionEnd < token.end) {
-        // starts and ends during this token
-        if (selectionStart !== token.start) {
-          spans.push(
-            <span key={key++} className={type}>
-              {text.slice(token.start, selectionStart)}
-            </span>,
-          )
-        }
-        if (selectionStart === selectionEnd) {
-          spans.push(cursor())
-        } else {
-          spans.push(
-            <span key={key++} className={type + " selection"}>
-              {text.slice(selectionStart, selectionEnd)}
-            </span>,
-          )
-        }
-        if (token.end !== selectionEnd) {
-          spans.push(
-            <span key={key++} className={type}>
-              {text.slice(selectionEnd, token.end)}
-            </span>,
-          )
-        }
-      } else {
-        // encompasses this token
-        spans.push(
-          <span key={key++} className={type + " selection"}>
-            {token.value}
-          </span>,
-        )
-      }
-    }
-  })
-
-  return spans
+function diffBoundingBoxes(boxA: Rect, boxB: Rect): Rect {
+  return {
+    left: boxA.left - boxB.left,
+    top: boxA.top - boxB.top,
+    width: boxA.width - boxB.width,
+    height: boxA.height - boxB.height,
+  }
 }

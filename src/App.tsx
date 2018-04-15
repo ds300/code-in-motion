@@ -113,6 +113,10 @@ injectGlobal`
   .comment {
     color: hsl(92, 45%, 46%);
   }
+  span.space {
+    /* for some reason display: inline-block for whitepsace ruins pre-wrap */
+    display: inline;
+  }
 `
 
 const text = `const instructions = [

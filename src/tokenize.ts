@@ -37,6 +37,8 @@ export function tokenize(code: string): Token[] {
       tokens.push({ type: "name", value, start, end })
     } else if (scanner.isUnterminated()) {
       tokens.push({ type: "error", value, start, end })
+    } else if (value.match(/\n/)) {
+      tokens.push({ type: "space", value, start, end })
     } else {
       switch (scanner.getToken()) {
         case SyntaxKind.JSDocComment:
