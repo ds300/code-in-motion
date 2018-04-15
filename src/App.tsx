@@ -20,6 +20,7 @@ const PageWrapper = styled.div`
 
 const AuthorLinkWrapper = styled.div`
   padding: 30px 0px;
+  letter-spacing: 0.3px;
 `
 
 const AuthorLink = styled.a`
@@ -38,7 +39,7 @@ injectGlobal`
     -moz-osx-font-smoothing: grayscale;
     padding: 0;
     margin: 0;
-    padding-top: 100px;
+    padding-top: 10vh;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
     color: rgb(192, 206, 216);
     line-height: 1.4em;
@@ -115,7 +116,7 @@ injectGlobal`
 const text = `const instructions = [
   "Type some code",
   "Delete some code",
-  "Just fuck my shit up fam",
+  "Just mess my biz up fam",
   "Then hit cmd + s",
   "to make it pretty again",
 ]

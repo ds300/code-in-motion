@@ -93,7 +93,10 @@ export class Editor extends React.Component<
   timeout = null as NodeJS.Timer | null
 
   setNewText = (ev: React.FormEvent<HTMLTextAreaElement>) => {
-    const text = ev.currentTarget.value
+    let text = ev.currentTarget.value
+    if (!text.endsWith("\n")) {
+      text = text + "\n"
+    }
     this.setState({ text })
     this.handleSelectionChange()
     if (this.timeout) {
@@ -124,11 +127,31 @@ export class Editor extends React.Component<
     }
   }
 
+  handleSave = async (ev: KeyboardEvent) => {
+    if (ev.key === "s" && ev.metaKey && this.textArea) {
+      ev.preventDefault()
+      try {
+        const text = this.textArea.value
+        const { formatted, cursorOffset } = await formatCode(
+          text,
+          this.textArea.selectionStart,
+        )
+        this.textArea.value = formatted
+        this.textArea.selectionStart = this.textArea.selectionEnd = cursorOffset
+
+        this.setState({ pretty: true, text: formatted })
+        this.handleSelectionChange()
+      } catch (e) {}
+    }
+  }
+
   componentDidMount() {
+    window.addEventListener("keydown", this.handleSave)
     document.addEventListener("selectionchange", this.handleSelectionChange)
   }
 
   componentWillUnmount() {
+    window.removeEventListener("keydown", this.handleSave)
     document.removeEventListener("selectionchange", this.handleSelectionChange)
   }
 
