@@ -21,10 +21,12 @@ const PageWrapper = styled.div`
 const AuthorLinkWrapper = styled.div`
   padding: 30px 0px;
   letter-spacing: 0.3px;
+  font-weight: 100;
 `
 
 const AuthorLink = styled.a`
   color: ${colors.bodyText};
+  font-weight: 500;
   &:hover {
     text-decoration: none;
   }
@@ -114,11 +116,12 @@ injectGlobal`
 `
 
 const text = `const instructions = [
-  "Type some code",
-  "Delete some code",
+  "Type some code here",
+  "Delete some code there",
   "Just mess my biz up fam",
+  "But don't make syntax errors",
   "Then hit cmd + s",
-  "to make it pretty again",
+  "And watch it do a FLIP 🤸",
 ]
 `
 
