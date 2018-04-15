@@ -4,17 +4,10 @@ import styled, { css } from "styled-components"
 import { Token, tokenize } from "./tokenize"
 import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
 import * as colors from "./colors"
+import { formatCode } from "./prettierWorker"
 
 const WIDTH = 400
 const HEIGHT = 300
-
-var worker = new Worker("/worker.js")
-
-worker.onmessage = function(message) {
-  console.log(message)
-}
-
-worker.postMessage({ text: "", options: {} })
 
 const editorBox = css`
   position: absolute;
@@ -101,14 +94,22 @@ export class Editor extends React.Component<
 
   setNewText = (ev: React.FormEvent<HTMLTextAreaElement>) => {
     const text = ev.currentTarget.value
-    this.setState({ text, pretty: false })
+    this.setState({ text })
     this.handleSelectionChange()
     if (this.timeout) {
       clearTimeout(this.timeout)
     }
-    this.timeout = setTimeout(() => {
-      this.setState({ pretty: true })
-    }, 800)
+    this.timeout = setTimeout(async () => {
+      if (this.textArea) {
+        try {
+          const { formatted } = await formatCode(
+            text,
+            this.textArea.selectionStart,
+          )
+          this.setState({ pretty: formatted === text })
+        } catch {}
+      }
+    }, 100)
   }
 
   textArea: HTMLTextAreaElement | null = null
