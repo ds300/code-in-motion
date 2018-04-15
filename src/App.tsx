@@ -8,6 +8,7 @@ import styled, { injectGlobal } from "styled-components"
 import { Button } from "./Button"
 import { GithubMark } from "./GithubMark"
 import { Editor } from "./Editor"
+import * as colors from "./colors"
 
 const PageWrapper = styled.div`
   display: flex;
@@ -17,18 +18,27 @@ const PageWrapper = styled.div`
   height: 100%;
 `
 
+const AuthorLinkWrapper = styled.div`
+  padding: 30px 0px;
+`
+
+const AuthorLink = styled.a`
+  color: ${colors.bodyText};
+  &:hover {
+    text-decoration: none;
+  }
+`
+
 injectGlobal`
   * {
     box-sizing: border-box;
-  }
-  html, #root, body {
-    height: 100%;
   }
   body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     padding: 0;
     margin: 0;
+    padding-top: 100px;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
     color: rgb(192, 206, 216);
     line-height: 1.4em;
@@ -116,5 +126,11 @@ export const App = () => (
     <Button href="https://github.com/ds300/prettier-thing">
       View source on GitHub <GithubMark />
     </Button>
+    <AuthorLinkWrapper>
+      by{" "}
+      <AuthorLink href="https://twitter.com/djsheldrick">
+        @djsheldrick
+      </AuthorLink>
+    </AuthorLinkWrapper>
   </PageWrapper>
 )
