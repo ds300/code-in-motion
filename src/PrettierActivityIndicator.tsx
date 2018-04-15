@@ -46,6 +46,7 @@ export class PrettierActivitiyIndicator extends React.PureComponent<
       }
       return { delays, offsets, dirty }
     }
+    return null
   }
 
   getGroupStyle(index: number): React.CSSProperties {
