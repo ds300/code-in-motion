@@ -181,35 +181,25 @@ export class Editor extends React.Component<
         newSpans,
         sharedSpans,
         boundingBoxes: oldBoundingBoxes,
+        sharedBoundingBoxes,
       } = this.flipState
       this.flipState = null
+      console.log({ sharedSpans })
 
-      const newBoundingBoxes = new Array(this.codeUnderlay.children.length)
-
-      for (let i = 0; i < newBoundingBoxes.length; i++) {
-        newBoundingBoxes[i] = this.codeUnderlay.children[
-          i
-        ].getBoundingClientRect()
-      }
-
-      let i = 0
       let j = 0
-      let k = 0
-      while (
-        i < newSpans.length &&
-        j < sharedSpans.length &&
-        k < oldSpans.length
-      ) {
-        while (newSpans[i].text !== sharedSpans[j].text) {
-          i++
+      for (let i = 0; i < sharedBoundingBoxes.length; i++) {
+        while (
+          this.codeUnderlay.children[j] &&
+          this.codeUnderlay.children[j].textContent !== sharedSpans[i].text
+        ) {
+          j++
         }
-        while (oldSpans[k].text !== sharedSpans[j].text) {
-          k++
+        if (!this.codeUnderlay.children[j]) {
+          break
         }
-        // get diff
         const { top, left } = diffBoundingBoxes(
-          oldBoundingBoxes[k],
-          newBoundingBoxes[i],
+          sharedBoundingBoxes[i],
+          this.codeUnderlay.children[j].getBoundingClientRect(),
         )
 
         const child = this.codeUnderlay.children[j]
@@ -218,16 +208,52 @@ export class Editor extends React.Component<
         setTimeout(() => {
           child.style.transition = "transform 0.14s ease-out"
           child.style.transform = "translate(0px, 0px)"
-          setTimeout(() => {
+          child.addEventListener("transitionend", () => {
             child.style.transition = ""
-          }, 140)
+          })
         }, 16)
-        console.log(
-          "mother fucking up in here",
-          `translate(${left}px, ${top}px)`,
-        )
-        j++
       }
+
+      // const newBoundingBoxes = new Array(this.codeUnderlay.children.length)
+
+      // for (let i = 0; i < newBoundingBoxes.length; i++) {
+      //   newBoundingBoxes[i] = this.codeUnderlay.children[
+      //     i
+      //   ].getBoundingClientRect()
+      // }
+
+      // let i = 0
+      // let j = 0
+      // let k = 0
+      // while (
+      //   i < newSpans.length &&
+      //   j < sharedSpans.length &&
+      //   k < oldSpans.length
+      // ) {
+      //   while (newSpans[i].text !== sharedSpans[j].text) {
+      //     i++
+      //   }
+      //   while (oldSpans[k].text !== sharedSpans[j].text) {
+      //     k++
+      //   }
+      //   // get diff
+      //   const { top, left } = diffBoundingBoxes(
+      //     oldBoundingBoxes[k],
+      //     newBoundingBoxes[i],
+      //   )
+
+      //   const child = this.codeUnderlay.children[j]
+      //   child.style.transform = `translate(${left}px, ${top}px)`
+
+      //   setTimeout(() => {
+      //     child.style.transition = "transform 0.14s ease-out"
+      //     child.style.transform = "translate(0px, 0px)"
+      //     child.addEventListener("transitionend", () => {
+      //       child.style.transition = ""
+      //     })
+      //   }, 16)
+      //   j++
+      // }
     }
   }
 
@@ -241,6 +267,8 @@ export class Editor extends React.Component<
           this.textArea.selectionStart,
           this.getPrintWidth(),
         )
+        
+        // TODO render this biz without the cursor. Or put the cursor at the start every time
 
         const oldSpans = renderCode(
           this.state.text,
@@ -259,7 +287,24 @@ export class Editor extends React.Component<
           this.textArea.selectionEnd,
         )
 
-        const sharedSpans = longestCommonSubsequence(oldSpans, newSpans)
+        const sharedSpans = longestCommonSubsequence(oldSpans, newSpans).filter(
+          ({ text }) => !text.match(/^\s+$/),
+        )
+
+        const sharedBoundingBoxes = new Array(sharedSpans.length)
+
+        let j = 0
+        for (let i = 0; i < sharedBoundingBoxes.length; i++) {
+          while (
+            this.codeUnderlay.children[j] &&
+            this.codeUnderlay.children[j].textContent !== sharedSpans[i].text
+          ) {
+            j++
+          }
+          sharedBoundingBoxes[i] = this.codeUnderlay.children[
+            j
+          ].getBoundingClientRect()
+        }
 
         const boundingBoxes = new Array(this.codeUnderlay.children.length)
 
@@ -274,6 +319,7 @@ export class Editor extends React.Component<
           newSpans,
           sharedSpans,
           boundingBoxes,
+          sharedBoundingBoxes,
         }
 
         this.setState({ pretty: true, text: formatted })
