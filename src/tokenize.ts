@@ -66,5 +66,29 @@ export function tokenize(code: string): Token[] {
     end: code.length,
   })
 
-  return tokens
+  // return tokens
+  const flattenedTokens = [] as Token[]
+
+  for (const token of tokens) {
+    if (token.type === "error" || token.type === "string") {
+      let lo = 0
+      while (lo < token.value.length) {
+        let hi = lo
+        while (hi < token.value.length && token.value[hi++] !== " ") {}
+
+        flattenedTokens.push({
+          type: token.type,
+          value: token.value.substring(lo, hi),
+          start: token.start + lo,
+          end: token.start + (hi - lo),
+        })
+
+        lo = hi
+      }
+    } else {
+      flattenedTokens.push(token)
+    }
+  }
+
+  return flattenedTokens
 }

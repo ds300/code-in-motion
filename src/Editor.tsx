@@ -51,6 +51,12 @@ const CodeUnderlay = styled.div`
   }
 `
 
+const SelectionUnderlay = CodeUnderlay.extend`
+  span {
+    color: ${colors.editorBackground};
+  }
+`
+
 const EditorWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -284,12 +290,12 @@ export class Editor extends React.Component<
 
         // TODO render this biz without the cursor. Or put the cursor at the start every time
 
-        const oldSpans = renderCode(tokenize(this.state.text))
+        const oldSpans = renderCode(this.state.text, tokenize(this.state.text))
 
         this.textArea.value = formatted
         this.textArea.selectionStart = this.textArea.selectionEnd = cursorOffset
 
-        const newSpans = renderCode(tokenize(formatted))
+        const newSpans = renderCode(formatted, tokenize(formatted))
 
         const moved = movedSpans(oldSpans, newSpans)
 
@@ -343,13 +349,16 @@ export class Editor extends React.Component<
           </ActivityIndicatorInnerWrapper>
         </ActivityIndicatorWrapper>
         <EditorBoxWrapper>
-          <CodeUnderlay>
-            {renderSelection(text, selectionStart, selectionEnd).map(
-              renderSpan,
-            )}
-          </CodeUnderlay>
+          <SelectionUnderlay>
+            {renderSelection(
+              text,
+              tokenize(text),
+              selectionStart,
+              selectionEnd,
+            ).map(renderSpan)}
+          </SelectionUnderlay>
           <CodeUnderlay innerRef={ref => (this.codeUnderlay = ref)}>
-            {renderCode(tokenize(text)).map(renderSpan)}
+            {renderCode(text, tokenize(text)).map(renderSpan)}
           </CodeUnderlay>
           <TextArea
             onInput={this.setNewText}
