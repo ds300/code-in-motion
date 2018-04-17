@@ -5,8 +5,8 @@ import { tokenize } from "./tokenize"
 import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
 import * as colors from "./colors"
 import { formatCode } from "./prettierWorker"
-import { renderCode, renderSpan, Span } from "./renderCode"
-import { longestCommonSubsequence } from "./longestCommonSubsequence"
+import { renderCode, renderSpan, Span, renderSelection } from "./renderCode"
+import { movedSpans } from "./movedSpans"
 
 const WIDTH = 500
 const HEIGHT = 300
@@ -22,7 +22,6 @@ const editorBox = css`
   max-width: ${WIDTH}px;
   max-height: ${HEIGHT}px;
   overflow: scroll;
-  background: ${colors.editorBackground};
   padding: 20px ${H_PADDING}px;
   margin: 0;
   white-space: pre-wrap;
@@ -33,6 +32,7 @@ const editorBox = css`
 
 const EditorBoxWrapper = styled.div`
   position: relative;
+  background: ${colors.editorBackground};
   width: ${WIDTH}px;
   height: ${HEIGHT}px;
   max-width: ${WIDTH}px;
@@ -166,53 +166,67 @@ export class Editor extends React.Component<
     return Math.floor(textAreaWidth / charWidth)
   }
 
-  flipState: {
-    oldSpans: Span[]
-    newSpans: Span[]
-    sharedSpans: Span[]
-    boundingBoxes: Rect[]
-  } | null = null
+  moves: Array<{
+    newIndex: number
+    oldBoundingBox: ClientRect
+    text: string
+  }> | null = null
+
+  transitionTimeout: NodeJS.Timer | null = null
 
   componentDidUpdate() {
-    if (this.flipState && this.codeUnderlay) {
-      console.log("fuck?", this.flipState)
-      const {
-        oldSpans,
-        newSpans,
-        sharedSpans,
-        boundingBoxes: oldBoundingBoxes,
-        sharedBoundingBoxes,
-      } = this.flipState
-      this.flipState = null
-      console.log({ sharedSpans })
+    console.log("wutt?")
+    if (this.moves && this.codeUnderlay) {
+      console.log("yeahhh!!")
+      const moves = this.moves
+      this.moves = null
 
-      let j = 0
-      for (let i = 0; i < sharedBoundingBoxes.length; i++) {
-        while (
-          this.codeUnderlay.children[j] &&
-          this.codeUnderlay.children[j].textContent !== sharedSpans[i].text
-        ) {
-          j++
+      for (const { newIndex, text, oldBoundingBox } of moves) {
+        const child = this.codeUnderlay.children[newIndex] as HTMLSpanElement
+
+        if (!child) {
+          console.error("what! Things don't line up :(")
+          return
         }
-        if (!this.codeUnderlay.children[j]) {
-          break
+
+        if (child.textContent !== text) {
+          console.error("wut!? text dont match :(")
+          return
         }
+
+        if (!(child instanceof HTMLSpanElement)) {
+          console.error("wut!? child not a span :(")
+          return
+        }
+
         const { top, left } = diffBoundingBoxes(
-          sharedBoundingBoxes[i],
-          this.codeUnderlay.children[j].getBoundingClientRect(),
+          oldBoundingBox,
+          child.getBoundingClientRect(),
         )
 
-        const child = this.codeUnderlay.children[j]
+        child.style.transition = ``
         child.style.transform = `translate(${left}px, ${top}px)`
-
-        setTimeout(() => {
-          child.style.transition = "transform 0.14s ease-out"
-          child.style.transform = "translate(0px, 0px)"
-          child.addEventListener("transitionend", () => {
-            child.style.transition = ""
-          })
-        }, 16)
       }
+
+      if (this.transitionTimeout) {
+        clearTimeout(this.transitionTimeout)
+      }
+
+      this.transitionTimeout = setTimeout(() => {
+        if (this.codeUnderlay) {
+          for (const { newIndex } of moves) {
+            const child = this.codeUnderlay.children[
+              newIndex
+            ] as HTMLSpanElement
+            if (!child) {
+              console.error("childs not the same as before :(")
+              continue
+            }
+            child.style.transition = `transform 0.14s ease-out`
+            child.style.transform = "translate(0px, 0px)"
+          }
+        }
+      }, 30)
 
       // const newBoundingBoxes = new Array(this.codeUnderlay.children.length)
 
@@ -267,64 +281,44 @@ export class Editor extends React.Component<
           this.textArea.selectionStart,
           this.getPrintWidth(),
         )
-        
+
         // TODO render this biz without the cursor. Or put the cursor at the start every time
 
-        const oldSpans = renderCode(
-          this.state.text,
-          tokenize(this.state.text),
-          this.textArea.selectionStart,
-          this.textArea.selectionEnd,
-        )
+        const oldSpans = renderCode(tokenize(this.state.text))
 
         this.textArea.value = formatted
         this.textArea.selectionStart = this.textArea.selectionEnd = cursorOffset
 
-        const newSpans = renderCode(
-          formatted,
-          tokenize(formatted),
-          this.textArea.selectionStart,
-          this.textArea.selectionEnd,
-        )
+        const newSpans = renderCode(tokenize(formatted))
 
-        const sharedSpans = longestCommonSubsequence(oldSpans, newSpans).filter(
-          ({ text }) => !text.match(/^\s+$/),
-        )
+        const moved = movedSpans(oldSpans, newSpans)
 
-        const sharedBoundingBoxes = new Array(sharedSpans.length)
-
-        let j = 0
-        for (let i = 0; i < sharedBoundingBoxes.length; i++) {
-          while (
-            this.codeUnderlay.children[j] &&
-            this.codeUnderlay.children[j].textContent !== sharedSpans[i].text
+        const moves = []
+        for (const { oldIndex, newIndex } of moved) {
+          if (
+            this.codeUnderlay.children[oldIndex].textContent !==
+            oldSpans[oldIndex].text
           ) {
-            j++
+            console.error("things don't match up")
+            return
           }
-          sharedBoundingBoxes[i] = this.codeUnderlay.children[
-            j
-          ].getBoundingClientRect()
+
+          moves.push({
+            newIndex,
+            text: newSpans[newIndex].text,
+            oldBoundingBox: this.codeUnderlay.children[
+              oldIndex
+            ].getBoundingClientRect(),
+          })
         }
 
-        const boundingBoxes = new Array(this.codeUnderlay.children.length)
-
-        for (let i = 0; i < boundingBoxes.length; i++) {
-          boundingBoxes[i] = this.codeUnderlay.children[
-            i
-          ].getBoundingClientRect()
-        }
-
-        this.flipState = {
-          oldSpans,
-          newSpans,
-          sharedSpans,
-          boundingBoxes,
-          sharedBoundingBoxes,
-        }
+        this.moves = moves
 
         this.setState({ pretty: true, text: formatted })
         this.handleSelectionChange()
-      } catch (e) {}
+      } catch (e) {
+        console.error(e)
+      }
     }
   }
 
@@ -341,9 +335,6 @@ export class Editor extends React.Component<
   render() {
     const { text, selectionStart, selectionEnd, pretty } = this.state
 
-    const selectionMin = Math.min(selectionStart, selectionEnd)
-    const selectionMax = Math.max(selectionStart, selectionEnd)
-
     return (
       <EditorWrapper>
         <ActivityIndicatorWrapper>
@@ -352,10 +343,13 @@ export class Editor extends React.Component<
           </ActivityIndicatorInnerWrapper>
         </ActivityIndicatorWrapper>
         <EditorBoxWrapper>
-          <CodeUnderlay innerRef={ref => (this.codeUnderlay = ref)}>
-            {renderCode(text, tokenize(text), selectionMin, selectionMax).map(
+          <CodeUnderlay>
+            {renderSelection(text, selectionStart, selectionEnd).map(
               renderSpan,
             )}
+          </CodeUnderlay>
+          <CodeUnderlay innerRef={ref => (this.codeUnderlay = ref)}>
+            {renderCode(tokenize(text)).map(renderSpan)}
           </CodeUnderlay>
           <TextArea
             onInput={this.setNewText}

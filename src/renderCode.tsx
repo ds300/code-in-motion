@@ -1,8 +1,6 @@
 import * as React from "react"
 import { Token } from "./tokenize"
 
-let key = 0
-
 function rangesOverlap(
   startA: number,
   endA: number,
@@ -21,14 +19,8 @@ export interface Span {
 }
 
 const span = (className: string, text: string) => ({ className, text })
-const cursor = span("cursor", " ")
 
-export function renderCode(
-  text: string,
-  tokens: Token[],
-  selectionStart: number,
-  selectionEnd: number,
-) {
+export function renderCode(tokens: Token[]) {
   const spans: Span[] = []
 
   tokens.forEach((token: Token, i, tokens) => {
@@ -40,49 +32,54 @@ export function renderCode(
         }
     }
 
-    if (!rangesOverlap(token.start, token.end, selectionStart, selectionEnd)) {
-      if (selectionStart === selectionEnd && selectionStart === token.start) {
-        spans.push(cursor)
+    spans.push(span(type, token.value))
+  })
+
+  return spans
+}
+
+export function renderSelection(
+  code: string,
+  selectionStart: number,
+  selectionEnd: number,
+) {
+  const spans: Span[] = []
+
+  {
+    let i = 0
+    while (i < selectionStart) {
+      if (code[i] === "\n") {
+        spans.push(span("space", "\n"))
+        i++
       }
-      spans.push(span(type, token.value))
-    } else {
-      if (selectionStart >= token.start && selectionEnd >= token.end) {
-        // starts during this token
-        if (selectionStart !== token.start) {
-          spans.push(span(type, text.slice(token.start, selectionStart)))
+      let lineLength = 0
+      while (i < selectionStart && code[i] !== "\n") {
+        lineLength++
+        i++
+      }
+      spans.push(span("punctution", " ".repeat(lineLength)))
+    }
+  }
+
+  if (selectionStart === selectionEnd) {
+    spans.push(span("cursor", " "))
+  } else {
+    {
+      let i = selectionStart
+      while (i < selectionEnd) {
+        if (code[i] === "\n") {
+          spans.push(span("space", "\n"))
+          i++
         }
-        spans.push(
-          span(type + " selection", text.slice(selectionStart, token.end)),
-        )
-      } else if (selectionStart <= token.start && selectionEnd < token.end) {
-        // ends during this token
-        spans.push(
-          span(type + " selection", text.slice(token.start, selectionEnd)),
-        )
-        if (token.end !== selectionEnd) {
-          spans.push(span(type, text.slice(selectionEnd, token.end)))
+        let lineLength = 0
+        while (i < selectionEnd && code[i] !== "\n") {
+          lineLength++
+          i++
         }
-      } else if (selectionStart > token.start && selectionEnd < token.end) {
-        // starts and ends during this token
-        if (selectionStart !== token.start) {
-          spans.push(span(type, text.slice(token.start, selectionStart)))
-        }
-        if (selectionStart === selectionEnd) {
-          spans.push(cursor)
-        } else {
-          spans.push(
-            span(type + " selection", text.slice(selectionStart, selectionEnd)),
-          )
-        }
-        if (token.end !== selectionEnd) {
-          spans.push(span(type, text.slice(selectionEnd, token.end)))
-        }
-      } else {
-        // encompasses this token
-        spans.push(span(type + " selection", token.value))
+        spans.push(span("punctuation selection", " ".repeat(lineLength)))
       }
     }
-  })
+  }
 
   return spans
 }

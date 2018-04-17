@@ -30,7 +30,7 @@ function backtrack(
   if (i === -1 || j === -1) {
     return
   } else if (a[j].text === b[i].text) {
-    result.unshift(a[j])
+    result.unshift(b[i])
     backtrack(result, matrix, a, b, i - 1, j - 1)
   } else if ((i > 0 ? matrix[i - 1][j] : 0) > (j > 0 ? matrix[i][j - 1] : 0)) {
     backtrack(result, matrix, a, b, i - 1, j)
@@ -39,8 +39,38 @@ function backtrack(
   }
 }
 
-export function longestCommonSubsequence(a: Span[], b: Span[]): any[] {
+function longestCommonSubsequence(a: Span[], b: Span[]): any[] {
   const result: Span[] = []
   backtrack(result, populateMatrix(a, b), a, b, b.length - 1, a.length - 1)
+  return result
+}
+
+interface Move {
+  oldIndex: number
+  newIndex: number
+}
+
+export function movedSpans(a: Span[], b: Span[]): Move[] {
+  const result = [] as Move[]
+  const lcs = longestCommonSubsequence(a, b)
+
+  let i = 0
+  let j = 0
+
+  for (const { text } of lcs) {
+    while (i < a.length && a[i].text !== text) {
+      i++
+    }
+
+    while (j < b.length && b[j].text !== text) {
+      j++
+    }
+
+    result.push({
+      oldIndex: i,
+      newIndex: j,
+    })
+  }
+
   return result
 }
