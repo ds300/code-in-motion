@@ -53,7 +53,7 @@ const CodeUnderlay = styled.div`
 
 const SelectionUnderlay = CodeUnderlay.extend`
   span {
-    color: ${colors.editorBackground};
+    color: rgba(0, 0, 0, 0);
   }
 `
 
@@ -195,7 +195,10 @@ export class Editor extends React.Component<
         }
 
         if (child.textContent !== text) {
-          console.error("wut!? text dont match :(")
+          console.error(
+            "wut!? text dont match :(",
+            JSON.stringify({ textContent: child.textContent, text }),
+          )
           return
         }
 
@@ -314,7 +317,7 @@ export class Editor extends React.Component<
               selectionStart,
               selectionEnd,
             ).map(({ className, text }) => (
-              <span className={className}>{text.replace(/\S/, "_")}</span>
+              <span className={className}>{text}</span>
             ))}
           </SelectionUnderlay>
           <CodeUnderlay innerRef={ref => (this.codeUnderlay = ref)}>
