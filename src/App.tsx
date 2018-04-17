@@ -8,6 +8,7 @@ import styled, { injectGlobal } from "styled-components"
 import { Button } from "./Button"
 import { GithubMark } from "./GithubMark"
 import { Editor } from "./Editor"
+import { Hearts } from "./Hearts"
 import * as colors from "./colors"
 
 const PageWrapper = styled.div`
@@ -131,7 +132,9 @@ const text = `const instructions = [
 
 export const App = () => (
   <PageWrapper>
-    <h1>Prettier Prettier</h1>
+    <h1>
+      Prettier + FLIP = <Hearts />
+    </h1>
     <Editor text={text} />
     <Button href="https://github.com/ds300/prettier-thing">
       View source on GitHub <GithubMark />
