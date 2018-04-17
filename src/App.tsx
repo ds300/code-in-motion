@@ -120,14 +120,30 @@ injectGlobal`
   }
 `
 
-const text = `const instructions = [
-  "Type some code here",
-  "Delete some code there",
+const text = `// Hi! This is an experiment using the FLIP
+// animation technique to see how Prettier
+// would feel with smooth transitions
+const instructions = [
+  "Type some code",
+  "Or delete some code",
+  "Whatever",
   "Just mess my biz up fam",
   "But don't make syntax errors",
   "Then hit cmd + s",
   "And watch it do a FLIP 🤸",
 ]
+
+// Delete one of these parameters
+function lolThisIsGonnaBeGreat(
+  one,
+  two,
+  three,
+) {
+  console.log("hahaha")
+}
+
+// and maybe delete it again after
+
 `
 
 export const App = () => (
