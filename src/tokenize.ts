@@ -70,7 +70,11 @@ export function tokenize(code: string): Token[] {
   const flattenedTokens = [] as Token[]
 
   for (const token of tokens) {
-    if (token.type === "error" || token.type === "string") {
+    if (
+      token.type === "error" ||
+      token.type === "string" ||
+      token.type === "comment"
+    ) {
       let lo = 0
       while (lo < token.value.length) {
         let hi = lo
@@ -80,7 +84,7 @@ export function tokenize(code: string): Token[] {
           type: token.type,
           value: token.value.substring(lo, hi),
           start: token.start + lo,
-          end: token.start + (hi - lo),
+          end: token.start + hi,
         })
 
         lo = hi
