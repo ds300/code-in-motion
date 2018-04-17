@@ -182,9 +182,7 @@ export class Editor extends React.Component<
   transitionTimeout: NodeJS.Timer | null = null
 
   componentDidUpdate() {
-    console.log("wutt?")
     if (this.moves && this.codeUnderlay) {
-      console.log("yeahhh!!")
       const moves = this.moves
       this.moves = null
 
