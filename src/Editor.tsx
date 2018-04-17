@@ -138,6 +138,7 @@ export class Editor extends React.Component<
 
   textArea: HTMLTextAreaElement | null = null
   codeUnderlay: HTMLDivElement | null = null
+  selectionUnderlay: HTMLDivElement | null = null
 
   handleSelectionChange = () => {
     if (this.textArea) {
@@ -233,47 +234,6 @@ export class Editor extends React.Component<
           }
         }
       }, 30)
-
-      // const newBoundingBoxes = new Array(this.codeUnderlay.children.length)
-
-      // for (let i = 0; i < newBoundingBoxes.length; i++) {
-      //   newBoundingBoxes[i] = this.codeUnderlay.children[
-      //     i
-      //   ].getBoundingClientRect()
-      // }
-
-      // let i = 0
-      // let j = 0
-      // let k = 0
-      // while (
-      //   i < newSpans.length &&
-      //   j < sharedSpans.length &&
-      //   k < oldSpans.length
-      // ) {
-      //   while (newSpans[i].text !== sharedSpans[j].text) {
-      //     i++
-      //   }
-      //   while (oldSpans[k].text !== sharedSpans[j].text) {
-      //     k++
-      //   }
-      //   // get diff
-      //   const { top, left } = diffBoundingBoxes(
-      //     oldBoundingBoxes[k],
-      //     newBoundingBoxes[i],
-      //   )
-
-      //   const child = this.codeUnderlay.children[j]
-      //   child.style.transform = `translate(${left}px, ${top}px)`
-
-      //   setTimeout(() => {
-      //     child.style.transition = "transform 0.14s ease-out"
-      //     child.style.transform = "translate(0px, 0px)"
-      //     child.addEventListener("transitionend", () => {
-      //       child.style.transition = ""
-      //     })
-      //   }, 16)
-      //   j++
-      // }
     }
   }
 
@@ -349,13 +309,15 @@ export class Editor extends React.Component<
           </ActivityIndicatorInnerWrapper>
         </ActivityIndicatorWrapper>
         <EditorBoxWrapper>
-          <SelectionUnderlay>
+          <SelectionUnderlay innerRef={ref => (this.selectionUnderlay = ref)}>
             {renderSelection(
               text,
               tokenize(text),
               selectionStart,
               selectionEnd,
-            ).map(renderSpan)}
+            ).map(({ className, text }) => (
+              <span className={className}>{text.replace(/\S/, "_")}</span>
+            ))}
           </SelectionUnderlay>
           <CodeUnderlay innerRef={ref => (this.codeUnderlay = ref)}>
             {renderCode(text, tokenize(text)).map(renderSpan)}
@@ -383,8 +345,13 @@ export class Editor extends React.Component<
               this.textArea = ref
               if (this.textArea) {
                 this.textArea.onscroll = () => {
-                  if (this.codeUnderlay && this.textArea) {
+                  if (
+                    this.codeUnderlay &&
+                    this.textArea &&
+                    this.selectionUnderlay
+                  ) {
                     this.codeUnderlay.scrollTop = this.textArea.scrollTop
+                    this.selectionUnderlay.scrollTop = this.textArea.scrollTop
                   }
                 }
               }
