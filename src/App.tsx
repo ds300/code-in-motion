@@ -43,7 +43,7 @@ injectGlobal`
     -moz-osx-font-smoothing: grayscale;
     padding: 0;
     margin: 0;
-    padding-top: 10vh;
+    padding-top: 6vh;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
     color: rgb(192, 206, 216);
     line-height: 1.4em;
@@ -121,36 +121,52 @@ injectGlobal`
   }
 `
 
-const text = `// Hi! This is an experiment using the FLIP
-// animation technique to see how Prettier
-// would feel with smooth transitions
-const instructions = [
-  "Type some code",
-  "Or delete some code",
-  "Whatever",
-  "Just mess my biz up fam",
-  "But don't make syntax errors",
-  "Then hit ${bowser.mac ? "cmd" : "ctrl"} + s",
-  "And watch it do a FLIP 🤸",
-]
+const meta = bowser.mac ? "⌘" : "ctrl"
 
-// Delete one of these parameters
-function lolThisIsGonnaBeGreat(
+const text = `// Hi! 👋 This is an interactive experiment.
+// It answers one question:
+//
+//    What if your code editor was animated?
+//
+// Scroll down to find out 👇
+
+const supportedOperations = {
+  format: {
+    keyCommand: "${meta} + s",
+    description: "Run Prettier to format this code",
+  },
+  undo: {
+    keyCommand: "${meta} + z",
+    description: "Revert recent changes",
+  },
+  redo: {
+    keyCommand: "${meta} + shift + z",
+    description: "Re-apply changes that were undone",
+  },
+}
+
+console.log("It uses the FLIP animation technique 🤸")
+
+type SupportedLanguages = "JavaScript" | "TypeScript"
+
+function deleteSomeOfMyParameters(
   one,
   two,
   three,
+  four,
+  five,
+  six
 ) {
-  console.log("hahaha")
+  console.log(\`\${one} is the loneliest number\`)
 }
 
-// and maybe delete it again after
-
+// Have fun! 💃
 `
 
 export const App = () => (
   <PageWrapper>
     <h1>
-      Prettier + FLIP = <Hearts />
+      Code + Animation = <Hearts />
     </h1>
     <Editor text={text} />
     <Button href="https://github.com/ds300/prettier-thing">
