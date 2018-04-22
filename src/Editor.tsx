@@ -10,8 +10,8 @@ import { formatCode } from "./prettierWorker"
 import { renderCode, renderSpan, renderSelection } from "./renderCode"
 import { movedSpans } from "./movedSpans"
 
-const WIDTH = 500
-const HEIGHT = 300
+const WIDTH = 600
+const HEIGHT = 500
 const H_PADDING = 20
 
 const editorBox = css`
