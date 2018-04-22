@@ -350,6 +350,7 @@ export class Editor extends React.Component<
         }
       }, 30)
     }
+    this.synchronizeScroll()
   }
 
   runPrettier = async () => {
@@ -445,6 +446,13 @@ export class Editor extends React.Component<
     document.removeEventListener("selectionchange", this.handleSelectionChange)
   }
 
+  synchronizeScroll = () => {
+    if (this.codeUnderlay && this.textArea && this.selectionUnderlay) {
+      this.codeUnderlay.scrollTop = this.textArea.scrollTop
+      this.selectionUnderlay.scrollTop = this.textArea.scrollTop
+    }
+  }
+
   render() {
     const { pretty } = this.state
     const { text, selectionStart, selectionEnd } = this.getCurrentState()
@@ -492,16 +500,7 @@ export class Editor extends React.Component<
             innerRef={ref => {
               this.textArea = ref
               if (this.textArea) {
-                this.textArea.onscroll = () => {
-                  if (
-                    this.codeUnderlay &&
-                    this.textArea &&
-                    this.selectionUnderlay
-                  ) {
-                    this.codeUnderlay.scrollTop = this.textArea.scrollTop
-                    this.selectionUnderlay.scrollTop = this.textArea.scrollTop
-                  }
-                }
+                this.textArea.onscroll = this.synchronizeScroll
               }
             }}
           />
