@@ -7,7 +7,7 @@ import { tokenize } from "./tokenize"
 import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
 import * as colors from "./colors"
 import { formatCode } from "./prettierWorker"
-import { renderCode, renderSpan, Span, renderSelection } from "./renderCode"
+import { renderCode, renderSpan, renderSelection } from "./renderCode"
 import { movedSpans } from "./movedSpans"
 
 const WIDTH = 500
