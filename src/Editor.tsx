@@ -1,5 +1,7 @@
 import * as React from "react"
 
+import * as bowser from "bowser"
+import immer from "immer"
 import styled, { css } from "styled-components"
 import { tokenize } from "./tokenize"
 import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
@@ -94,31 +96,107 @@ interface Rect {
   height: number
 }
 
+interface HistoryEntry {
+  text: string
+  selectionStart: number
+  selectionEnd: number
+  timestamp: number
+}
+
 export class Editor extends React.Component<
   { text: string },
   {
-    text: string
-    selectionStart: number
-    selectionEnd: number
+    history: {
+      entries: HistoryEntry[]
+      offset: number
+    }
     pretty: boolean
   }
 > {
   state = {
-    text: this.props.text,
-    selectionStart: 0,
-    selectionEnd: 0,
+    history: {
+      entries: [
+        {
+          text: this.props.text,
+          timestamp: Date.now(),
+          selectionStart: 0,
+          selectionEnd: 0,
+        },
+      ],
+      offset: 0,
+    },
     pretty: true,
   }
 
   timeout = null as NodeJS.Timer | null
+
+  getCurrentState = () => {
+    return this.state.history.entries[this.state.history.offset]
+  }
+
+  _applyCurrentState = () => {
+    const { text, selectionStart, selectionEnd } = this.getCurrentState()
+    if (this.textArea) {
+      this.textArea.value = text
+      this.textArea.selectionStart = selectionStart
+      this.textArea.selectionEnd = selectionEnd
+    }
+  }
+
+  undo = () => {
+    this.setState(
+      state =>
+        immer(state, draft => {
+          draft.history.offset = Math.max(draft.history.offset - 1, 0)
+        }),
+      this._applyCurrentState,
+    )
+  }
+
+  redo = () => {
+    this.setState(
+      state =>
+        immer(state, draft => {
+          draft.history.offset = Math.min(
+            draft.history.offset + 1,
+            draft.history.entries.length - 1,
+          )
+        }),
+      this._applyCurrentState,
+    )
+  }
+
+  pushHistory = (entry: HistoryEntry) => {
+    // very low-effort and shitty history pruning. Basically debounce updates
+    // by 300ms
+    const lastTimestamp = this.state.history.entries[this.state.history.offset]
+      .timestamp
+    const shouldPush = entry.timestamp - lastTimestamp > 300
+
+    this.setState(state =>
+      immer(state, draft => {
+        draft.history.entries.length = draft.history.offset + 1
+        if (shouldPush) {
+          draft.history.entries.push(entry)
+          draft.history.offset++
+        } else {
+          draft.history.entries[draft.history.offset] = entry
+        }
+      }),
+    )
+  }
 
   setNewText = (ev: React.FormEvent<HTMLTextAreaElement>) => {
     let text = ev.currentTarget.value
     if (!text.endsWith("\n")) {
       text = text + "\n"
     }
-    this.setState({ text })
-    this.handleSelectionChange()
+    this.pushHistory({
+      text,
+      selectionStart: ev.currentTarget.selectionStart,
+      selectionEnd: ev.currentTarget.selectionEnd,
+      timestamp: Date.now(),
+    })
     if (this.timeout) {
       clearTimeout(this.timeout)
     }
@@ -141,12 +219,18 @@ export class Editor extends React.Component<
   selectionUnderlay: HTMLDivElement | null = null
 
   handleSelectionChange = () => {
-    if (this.textArea) {
-      this.setState({
-        selectionStart: this.textArea.selectionStart,
-        selectionEnd: this.textArea.selectionEnd,
-      })
-    }
+    this.setState(state =>
+      immer(state, draft => {
+        if (this.textArea) {
+          draft.history.entries[
+            draft.history.offset
+          ].selectionStart = this.textArea.selectionStart
+          draft.history.entries[
+            draft.history.offset
+          ].selectionEnd = this.textArea.selectionEnd
+        }
+      }),
+    )
   }
 
   getPrintWidth = () => {
@@ -238,9 +322,8 @@ export class Editor extends React.Component<
     }
   }
 
-  handleSave = async (ev: KeyboardEvent) => {
-    if (ev.key === "s" && ev.metaKey && this.textArea && this.codeUnderlay) {
-      ev.preventDefault()
+  runPrettier = async () => {
+    if (this.textArea && this.codeUnderlay) {
       try {
         const text = this.textArea.value
         const { formatted, cursorOffset } = await formatCode(
@@ -251,7 +334,9 @@ export class Editor extends React.Component<
 
         // TODO render this biz without the cursor. Or put the cursor at the start every time
 
-        const oldSpans = renderCode(this.state.text, tokenize(this.state.text))
+        const { text: oldText } = this.getCurrentState()
+
+        const oldSpans = renderCode(oldText, tokenize(oldText))
 
         this.textArea.value = formatted
         this.textArea.selectionStart = this.textArea.selectionEnd = cursorOffset
@@ -281,26 +366,53 @@ export class Editor extends React.Component<
 
         this.moves = moves
 
-        this.setState({ pretty: true, text: formatted })
-        this.handleSelectionChange()
+        this.pushHistory({
+          text: formatted,
+          selectionStart: cursorOffset,
+          selectionEnd: cursorOffset,
+          timestamp: Date.now(),
+        })
+        this.setState({ pretty: true })
       } catch (e) {
         console.error(e)
       }
     }
   }
 
+  handleKeyDown = async (ev: KeyboardEvent) => {
+    const isCorrectModifierKeyPressed =
+      (bowser.mac && ev.metaKey) || (!bowser.mac && ev.ctrlKey)
+    if (isCorrectModifierKeyPressed) {
+      switch (ev.key) {
+        case "s":
+          ev.preventDefault()
+          this.runPrettier()
+          break
+        case "z":
+          ev.preventDefault()
+          if (ev.shiftKey) {
+            this.redo()
+          } else {
+            this.undo()
+          }
+          break
+      }
+    }
+  }
+
   componentDidMount() {
-    window.addEventListener("keydown", this.handleSave)
+    window.addEventListener("keydown", this.handleKeyDown)
     document.addEventListener("selectionchange", this.handleSelectionChange)
   }
 
   componentWillUnmount() {
-    window.removeEventListener("keydown", this.handleSave)
+    window.removeEventListener("keydown", this.handleKeyDown)
     document.removeEventListener("selectionchange", this.handleSelectionChange)
   }
 
   render() {
-    const { text, selectionStart, selectionEnd, pretty } = this.state
+    const { pretty } = this.state
+    const { text, selectionStart, selectionEnd } = this.getCurrentState()
 
     return (
       <EditorWrapper>
