@@ -17,6 +17,12 @@ export interface Token {
   end: number
 }
 
+const typeScriptDeclWords = {
+  type: true,
+  interface: true,
+  enum: true,
+}
+
 export function tokenize(code: string): Token[] {
   const scanner = createScanner(
     ScriptTarget.Latest,
@@ -26,12 +32,20 @@ export function tokenize(code: string): Token[] {
   )
   const tokens: Token[] = []
   scanner.scan()
+
+  let braceLevelCountStack = []
   while (scanner.getToken() !== SyntaxKind.EndOfFileToken) {
     const value = scanner.getTokenText()
     const start = scanner.getStartPos()
     const end = start + value.length
 
-    if (scanner.isReservedWord()) {
+    if (
+      value in typeScriptDeclWords &&
+      tokens.length &&
+      tokens[tokens.length - 1].value.match(/\n/)
+    ) {
+      tokens.push({ type: "reserved", value, start, end })
+    } else if (scanner.isReservedWord()) {
       tokens.push({ type: "reserved", value, start, end })
     } else if (scanner.isIdentifier()) {
       tokens.push({ type: "name", value, start, end })
@@ -41,17 +55,40 @@ export function tokenize(code: string): Token[] {
       tokens.push({ type: "space", value, start, end })
     } else {
       switch (scanner.getToken()) {
+        case SyntaxKind.TemplateHead:
+        case SyntaxKind.TemplateMiddle:
+          tokens.push({ type: "string", value, start, end })
+          braceLevelCountStack.push(1)
+          break
         case SyntaxKind.JSDocComment:
         case SyntaxKind.MultiLineCommentTrivia:
         case SyntaxKind.SingleLineCommentTrivia:
           tokens.push({ type: "comment", value, start, end })
           break
         case SyntaxKind.StringLiteral:
+        case SyntaxKind.TemplateTail:
+        case SyntaxKind.TemplateExpression:
+        case SyntaxKind.TemplateSpan:
+        case SyntaxKind.FirstTemplateToken:
+        case SyntaxKind.TaggedTemplateExpression:
           tokens.push({ type: "string", value, start, end })
           break
         case SyntaxKind.NumericLiteral:
           tokens.push({ type: "number", value, start, end })
           break
+        case SyntaxKind.CloseBraceToken:
+          if (braceLevelCountStack.length > 0) {
+            braceLevelCountStack[braceLevelCountStack.length - 1]--
+            if (braceLevelCountStack[braceLevelCountStack.length - 1] === 0) {
+              braceLevelCountStack.pop()
+              scanner.reScanTemplateToken()
+              continue
+            }
+          }
+        case SyntaxKind.OpenBraceToken:
+          if (braceLevelCountStack.length > 0) {
+            braceLevelCountStack[braceLevelCountStack.length - 1]++
+          }
         default:
           tokens.push({ type: "punctuation", value, start, end })
           break
