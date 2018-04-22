@@ -265,10 +265,24 @@ export class Editor extends React.Component<
     text: string
   }> | null = null
 
+  cursorBoundingBox: ClientRect | null = null
+
+  getCursor = (): HTMLSpanElement | null => {
+    if (this.selectionUnderlay) {
+      const cursor = this.selectionUnderlay.querySelector(".cursor")
+      if (cursor) {
+        return cursor as HTMLSpanElement
+      }
+    }
+    return null
+  }
+
   transitionTimeout: NodeJS.Timer | null = null
 
   componentDidUpdate() {
     if (this.moves && this.codeUnderlay) {
+      const cursorBoundingBox = this.cursorBoundingBox
+      this.cursorBoundingBox = null
       const moves = this.moves
       this.moves = null
 
@@ -302,6 +316,16 @@ export class Editor extends React.Component<
         child.style.transform = `translate(${left}px, ${top}px)`
       }
 
+      const cursor = this.getCursor()
+      if (cursorBoundingBox && cursor) {
+        const { top, left } = diffBoundingBoxes(
+          cursorBoundingBox,
+          cursor.getBoundingClientRect(),
+        )
+        cursor.style.transition = ``
+        cursor.style.transform = `translate(${left}px, ${top}px)`
+      }
+
       if (this.transitionTimeout) {
         clearTimeout(this.transitionTimeout)
       }
@@ -316,9 +340,13 @@ export class Editor extends React.Component<
               console.error("childs not the same as before :(")
               continue
             }
-            child.style.transition = `transform 0.14s ease-out`
+            child.style.transition = `transform 0.24s ease-out`
             child.style.transform = "translate(0px, 0px)"
           }
+        }
+        if (cursor) {
+          cursor.style.transition = `transform 0.24s ease-out`
+          cursor.style.transform = "translate(0px, 0px)"
         }
       }, 30)
     }
@@ -367,6 +395,11 @@ export class Editor extends React.Component<
         }
 
         this.moves = moves
+
+        const cursor = this.getCursor()
+        if (cursor) {
+          this.cursorBoundingBox = cursor.getBoundingClientRect()
+        }
 
         this.pushHistory({
           text: formatted,
