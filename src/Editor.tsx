@@ -30,6 +30,7 @@ const editorBox = css`
   font-family: "Fira Code", "Menlo", "Source Code Pro", "Monaco", "Consolas",
     monospace;
   font-weight: 500;
+  -ms-overflow-style: none;
 `
 
 const EditorBoxWrapper = styled.div`
@@ -39,6 +40,7 @@ const EditorBoxWrapper = styled.div`
   height: ${HEIGHT}px;
   max-width: ${WIDTH}px;
   max-height: ${HEIGHT}px;
+  -ms-overflow-style: none;
   overflow: scroll;
   margin-bottom: 50px;
 `

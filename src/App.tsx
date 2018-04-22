@@ -10,6 +10,7 @@ import { GithubMark } from "./GithubMark"
 import { Editor } from "./Editor"
 import { Hearts } from "./Hearts"
 import * as colors from "./colors"
+import * as bowser from "bowser"
 
 const PageWrapper = styled.div`
   display: flex;
@@ -81,7 +82,7 @@ injectGlobal`
   }
   .cursor {
     animation: cusrorAnimation 0.9s linear infinite; 
-    background: #ffffffa6;
+    background: rgba(255,255,255, 0.7);
     display: inline-block;
     position: absolute;
     width: 2px;
@@ -129,7 +130,7 @@ const instructions = [
   "Whatever",
   "Just mess my biz up fam",
   "But don't make syntax errors",
-  "Then hit cmd + s",
+  "Then hit ${bowser.mac ? "cmd" : "ctrl"} + s",
   "And watch it do a FLIP 🤸",
 ]
 
