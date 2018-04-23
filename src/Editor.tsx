@@ -9,24 +9,22 @@ import * as colors from "./colors"
 import { formatCode } from "./prettierWorker"
 import { renderCode, renderSpan, renderSelection } from "./renderCode"
 import { movedSpans } from "./movedSpans"
+import throttle from "lodash/throttle"
 
 const WIDTH = 600
 const HEIGHT = 500
 const H_PADDING = 20
 
 const editorBox = css`
+  transition: transform 0.24s ease-out;
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: ${WIDTH}px;
-  height: ${HEIGHT}px;
-  max-width: ${WIDTH}px;
-  max-height: ${HEIGHT}px;
-  overflow: scroll;
+  top: 0;
+  left: 0;
+  min-width: ${WIDTH}px;
+  min-height: ${HEIGHT}px;
   padding: 20px ${H_PADDING}px;
   margin: 0;
-  white-space: pre-wrap;
+  white-space: pre;
   font-family: "Fira Code", "Menlo", "Source Code Pro", "Monaco", "Consolas",
     monospace;
   font-weight: 500;
@@ -41,17 +39,16 @@ const EditorBoxWrapper = styled.div`
   max-width: ${WIDTH}px;
   max-height: ${HEIGHT}px;
   -ms-overflow-style: none;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
   margin-bottom: 50px;
 `
 
 const CodeUnderlay = styled.div`
   ${editorBox};
   pointer-events: none;
-  box-shadow: 0 3px 6px 2px rgba(0, 0, 0, 0.1);
   span {
     display: inline-block;
-    white-space: pre;
   }
 `
 
@@ -279,6 +276,33 @@ export class Editor extends React.Component<
 
   transitionTimeout: NodeJS.Timer | null = null
 
+  updateEditorSize = throttle(
+    () => {
+      if (this.codeUnderlay && this.textArea && this.selectionUnderlay) {
+        const actualWidth = this.codeUnderlay.offsetWidth
+        const actualHeight = this.codeUnderlay.offsetHeight
+
+        this.textArea.style.width = actualWidth + "px"
+        this.textArea.style.height = actualHeight + "px"
+
+        const ratio = WIDTH / actualWidth
+        const xOffset = (actualWidth - WIDTH) / 2
+        const yOffset = (actualHeight - actualHeight * ratio) / 2
+
+        const transform = `translate(${-xOffset}px, ${-yOffset}px) scale(${ratio})`
+        this.codeUnderlay.style.transform = transform
+        this.selectionUnderlay.style.transform = transform
+        this.textArea.style.transform = transform
+
+        if (this.codeUnderlay.parentElement) {
+          this.codeUnderlay.parentElement.scrollLeft = 0
+        }
+      }
+    },
+    120,
+    { trailing: true },
+  )
+
   componentDidUpdate() {
     if (this.moves && this.codeUnderlay) {
       const cursorBoundingBox = this.cursorBoundingBox
@@ -350,7 +374,7 @@ export class Editor extends React.Component<
         }
       }, 30)
     }
-    this.synchronizeScroll()
+    this.updateEditorSize()
   }
 
   runPrettier = async () => {
@@ -437,6 +461,7 @@ export class Editor extends React.Component<
   }
 
   componentDidMount() {
+    this.updateEditorSize()
     window.addEventListener("keydown", this.handleKeyDown)
     document.addEventListener("selectionchange", this.handleSelectionChange)
   }
@@ -446,12 +471,7 @@ export class Editor extends React.Component<
     document.removeEventListener("selectionchange", this.handleSelectionChange)
   }
 
-  synchronizeScroll = () => {
-    if (this.codeUnderlay && this.textArea && this.selectionUnderlay) {
-      this.codeUnderlay.scrollTop = this.textArea.scrollTop
-      this.selectionUnderlay.scrollTop = this.textArea.scrollTop
-    }
-  }
+  scaleWrapperRef: HTMLDivElement | null = null
 
   render() {
     const { pretty } = this.state
@@ -464,7 +484,7 @@ export class Editor extends React.Component<
             <PrettierActivitiyIndicator dirty={!pretty} />
           </ActivityIndicatorInnerWrapper>
         </ActivityIndicatorWrapper>
-        <EditorBoxWrapper>
+        <EditorBoxWrapper onScroll={ev => (ev.currentTarget.scrollLeft = 0)}>
           <SelectionUnderlay innerRef={ref => (this.selectionUnderlay = ref)}>
             {renderSelection(
               text,
@@ -499,9 +519,6 @@ export class Editor extends React.Component<
             defaultValue={text}
             innerRef={ref => {
               this.textArea = ref
-              if (this.textArea) {
-                this.textArea.onscroll = this.synchronizeScroll
-              }
             }}
           />
         </EditorBoxWrapper>
