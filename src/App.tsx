@@ -121,7 +121,7 @@ injectGlobal`
   }
 `
 
-const meta = bowser.mac ? "⌘" : "ctrl"
+const meta = bowser.mac ? "cmd" : "ctrl"
 
 const text = `// Hi! 👋 This is an interactive experiment.
 // It answers one question:
@@ -165,9 +165,7 @@ function deleteSomeOfMyParameters(
 
 export const App = () => (
   <PageWrapper>
-    <h1>
-      Code + Animation = <Hearts />
-    </h1>
+    <h1>Code in Motion</h1>
     <Editor text={text} />
     <Button href="https://github.com/ds300/prettier-thing">
       View source on GitHub <GithubMark />

@@ -4,7 +4,6 @@ import * as bowser from "bowser"
 import immer from "immer"
 import styled, { css } from "styled-components"
 import { tokenize } from "./tokenize"
-import { PrettierActivitiyIndicator } from "./PrettierActivityIndicator"
 import * as colors from "./colors"
 import { formatCode } from "./prettierWorker"
 import { renderCode, renderSpan, renderSelection } from "./renderCode"
@@ -16,7 +15,7 @@ const HEIGHT = 500
 const H_PADDING = 20
 
 const editorBox = css`
-  transition: transform 0.24s ease-out;
+  transition: transform 0.24s linear;
   position: absolute;
   top: 0;
   left: 0;
@@ -63,19 +62,6 @@ const EditorWrapper = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-`
-
-const ActivityIndicatorWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-`
-
-const ActivityIndicatorInnerWrapper = styled.div`
-  background: ${colors.editorBackground};
-  display: inline-block;
-  line-height: 0px;
-  padding: 8px;
 `
 
 const TextArea = styled.textarea`
@@ -283,7 +269,7 @@ export class Editor extends React.Component<
         const actualHeight = this.codeUnderlay.offsetHeight
 
         this.textArea.style.width = actualWidth + "px"
-        this.textArea.style.height = actualHeight + "px"
+        this.textArea.style.height = actualHeight + HEIGHT / 2 + "px"
 
         const ratio = WIDTH / actualWidth
         const xOffset = (actualWidth - WIDTH) / 2
@@ -479,11 +465,6 @@ export class Editor extends React.Component<
 
     return (
       <EditorWrapper>
-        <ActivityIndicatorWrapper>
-          <ActivityIndicatorInnerWrapper>
-            <PrettierActivitiyIndicator dirty={!pretty} />
-          </ActivityIndicatorInnerWrapper>
-        </ActivityIndicatorWrapper>
         <EditorBoxWrapper onScroll={ev => (ev.currentTarget.scrollLeft = 0)}>
           <SelectionUnderlay innerRef={ref => (this.selectionUnderlay = ref)}>
             {renderSelection(
