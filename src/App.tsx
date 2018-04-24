@@ -8,7 +8,6 @@ import styled, { injectGlobal } from "styled-components"
 import { Button } from "./Button"
 import { GithubMark } from "./GithubMark"
 import { Editor } from "./Editor"
-import { Hearts } from "./Hearts"
 import * as colors from "./colors"
 import * as bowser from "bowser"
 
