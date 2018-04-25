@@ -96,7 +96,6 @@ export class Editor extends React.Component<
       entries: HistoryEntry[]
       offset: number
     }
-    pretty: boolean
   }
 > {
   state = {
@@ -111,10 +110,7 @@ export class Editor extends React.Component<
       ],
       offset: 0,
     },
-    pretty: true,
   }
-
-  timeout = null as NodeJS.Timer | null
 
   getCurrentState = () => {
     return this.state.history.entries[this.state.history.offset]
@@ -183,21 +179,6 @@ export class Editor extends React.Component<
       selectionEnd: ev.currentTarget.selectionEnd,
       timestamp: Date.now(),
     })
-    if (this.timeout) {
-      clearTimeout(this.timeout)
-    }
-    this.timeout = setTimeout(async () => {
-      if (this.textArea) {
-        try {
-          const { formatted } = await formatCode(
-            text,
-            this.textArea.selectionStart,
-            this.getPrintWidth(),
-          )
-          this.setState({ pretty: formatted === text })
-        } catch {}
-      }
-    }, 100)
   }
 
   textArea: HTMLTextAreaElement | null = null
@@ -275,6 +256,10 @@ export class Editor extends React.Component<
         this.textArea.style.height = actualHeight + HEIGHT + "px"
 
         const ratio = WIDTH / actualWidth
+
+        if (ratio === 1) {
+          return
+        }
 
         const transform = `scale(${ratio})`
         this.codeUnderlay.style.transform = transform
@@ -419,7 +404,6 @@ export class Editor extends React.Component<
           selectionEnd: cursorOffset,
           timestamp: Date.now(),
         })
-        this.setState({ pretty: true })
       } catch (e) {
         console.error(e)
       }
@@ -458,10 +442,7 @@ export class Editor extends React.Component<
     document.removeEventListener("selectionchange", this.handleSelectionChange)
   }
 
-  scaleWrapperRef: HTMLDivElement | null = null
-
   render() {
-    const { pretty } = this.state
     const { text, selectionStart, selectionEnd } = this.getCurrentState()
 
     return (
