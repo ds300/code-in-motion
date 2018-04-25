@@ -122,12 +122,17 @@ injectGlobal`
 
 const meta = bowser.mac ? "cmd" : "ctrl"
 
-const text = `// Hi! 👋 This is an interactive experiment.
-// It answers one question:
+const text = `// Hi! 👋
 //
-//    What if your code editor was animated?
+// This is a toy text editor with two unique features:
 //
-// Scroll down to find out 👇
+// - If lines grow too large, the editor zooms out
+//   rather than abruptly scrolling across.
+//
+// - Code formatting (using Prettier) and undo/redo are 
+//   animated, so you keep track of what moves where.
+//
+// Scroll down to try it out 👇👇
 
 const supportedOperations = {
   format: {
