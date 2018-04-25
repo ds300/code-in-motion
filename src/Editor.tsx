@@ -15,12 +15,13 @@ const HEIGHT = 500
 const H_PADDING = 20
 
 const editorBox = css`
-  transition: transform 0.24s linear;
+  transition: transform 0.24s ease-out;
   position: absolute;
   top: 0;
   left: 0;
   min-width: ${WIDTH}px;
   min-height: ${HEIGHT}px;
+  transform-origin: top left;
   padding: 20px ${H_PADDING}px;
   margin: 0;
   white-space: pre;
@@ -268,14 +269,14 @@ export class Editor extends React.Component<
         const actualWidth = this.codeUnderlay.offsetWidth
         const actualHeight = this.codeUnderlay.offsetHeight
 
-        this.textArea.style.width = actualWidth + "px"
-        this.textArea.style.height = actualHeight + HEIGHT / 2 + "px"
+        // +1 px for weird safari issue where fonts don't render the same
+        // in text area
+        this.textArea.style.width = actualWidth + 1 + "px"
+        this.textArea.style.height = actualHeight + HEIGHT + "px"
 
         const ratio = WIDTH / actualWidth
-        const xOffset = (actualWidth - WIDTH) / 2
-        const yOffset = (actualHeight - actualHeight * ratio) / 2
 
-        const transform = `translate(${-xOffset}px, ${-yOffset}px) scale(${ratio})`
+        const transform = `scale(${ratio})`
         this.codeUnderlay.style.transform = transform
         this.selectionUnderlay.style.transform = transform
         this.textArea.style.transform = transform
