@@ -257,10 +257,6 @@ export class Editor extends React.Component<
 
         const ratio = WIDTH / actualWidth
 
-        if (ratio === 1) {
-          return
-        }
-
         const transform = `scale(${ratio})`
         this.codeUnderlay.style.transform = transform
         this.selectionUnderlay.style.transform = transform
