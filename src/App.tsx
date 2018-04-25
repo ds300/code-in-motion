@@ -85,6 +85,7 @@ injectGlobal`
     display: inline-block;
     position: absolute;
     width: 2px;
+    margin-left: -1px;
   }
   .error {
     background: #714a4a;
