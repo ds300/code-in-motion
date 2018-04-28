@@ -272,7 +272,7 @@ export class Editor extends React.Component<
   )
 
   componentDidUpdate() {
-    if (this.moves && this.codeUnderlay) {
+    if (this.moves && this.codeUnderlay && this.wrapperRef) {
       const cursorBoundingBox = this.cursorBoundingBox
       this.cursorBoundingBox = null
       const moves = this.moves
@@ -310,12 +310,36 @@ export class Editor extends React.Component<
 
       const cursor = this.getCursor()
       if (cursorBoundingBox && cursor) {
+        const newCursorBoundingBox = cursor.getBoundingClientRect()
         const { top, left } = diffBoundingBoxes(
           cursorBoundingBox,
-          cursor.getBoundingClientRect(),
+          newCursorBoundingBox,
         )
         cursor.style.transition = ``
         cursor.style.transform = `translate(${left}px, ${top}px)`
+
+        const wrapperBoundingBox = this.wrapperRef.getBoundingClientRect()
+
+        const bottomDiff =
+          newCursorBoundingBox.top +
+          newCursorBoundingBox.height -
+          (wrapperBoundingBox.top + wrapperBoundingBox.height)
+
+        if (bottomDiff > 0) {
+          // cursor is too low
+          this.wrapperRef.scrollBy({
+            top: bottomDiff + 100,
+            behavior: "smooth",
+          })
+        } else if (newCursorBoundingBox.top < wrapperBoundingBox.top) {
+          // cursor is too high
+          const diff = wrapperBoundingBox.top - newCursorBoundingBox.top
+          // scroll up
+          this.wrapperRef.scrollBy({
+            top: -(diff + 100),
+            behavior: "smooth",
+          })
+        }
       }
 
       if (this.transitionTimeout) {
@@ -438,12 +462,17 @@ export class Editor extends React.Component<
     document.removeEventListener("selectionchange", this.handleSelectionChange)
   }
 
+  wrapperRef: HTMLDivElement | null = null
+
   render() {
     const { text, selectionStart, selectionEnd } = this.getCurrentState()
 
     return (
       <EditorWrapper>
-        <EditorBoxWrapper onScroll={ev => (ev.currentTarget.scrollLeft = 0)}>
+        <EditorBoxWrapper
+          onScroll={ev => (ev.currentTarget.scrollLeft = 0)}
+          innerRef={ref => (this.wrapperRef = ref)}
+        >
           <SelectionUnderlay innerRef={ref => (this.selectionUnderlay = ref)}>
             {renderSelection(
               text,
