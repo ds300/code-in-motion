@@ -40,6 +40,10 @@ const editorBox = css`
 `
 
 const EditorBoxWrapper = styled.div`
+  white-space: pre;
+  font-family: "Fira Code", "Menlo", "Source Code Pro", "Monaco", "Consolas",
+    monospace;
+  font-weight: 500;
   position: relative;
   background: ${colors.editorBackground};
   width: ${WIDTH}px;
@@ -230,25 +234,20 @@ export class Editor extends React.Component<Props, State, Snapshot> {
   }
 
   getPrintWidth = () => {
-    if (!this.codeUnderlay) {
+    if (!this.wrapperRef) {
       return 50
     }
 
-    const elem = this.codeUnderlay.children[0]
+    const span = document.createElement("span")
+    span.innerText = "abcdefghijklmnopqrstuvwxyz"
 
-    if (!elem) {
-      return 50
-    }
-
-    if (!elem.textContent) {
-      console.error("child element has no text content")
-      return 50
-    }
+    this.wrapperRef.appendChild(span)
 
     const textAreaWidth = WIDTH - 2 * H_PADDING
 
-    const charWidth =
-      elem.getBoundingClientRect().width / elem.textContent.length
+    const charWidth = span.getBoundingClientRect().width / 26
+
+    span.remove()
 
     return Math.floor(textAreaWidth / charWidth)
   }
@@ -506,7 +505,7 @@ export class Editor extends React.Component<Props, State, Snapshot> {
                   console.error("childs not the same as before :(")
                   continue
                 }
-                child.style.transition = `transform 0.24s ease-out, opacity 0.3s ease-out`
+                child.style.transition = `transform 0.20s ease-out, opacity 0.3s ease-out`
                 child.style.transform = "translateY(0px)"
                 child.style.opacity = "1"
               }
