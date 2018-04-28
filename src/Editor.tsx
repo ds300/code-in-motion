@@ -3,12 +3,20 @@ import * as React from "react"
 import * as bowser from "bowser"
 import immer from "immer"
 import styled, { css } from "styled-components"
-import { tokenize } from "./tokenize"
+import { tokenize as _tokenize } from "./tokenize"
 import * as colors from "./colors"
 import { formatCode } from "./prettierWorker"
-import { renderCode, renderSpan, renderSelection } from "./renderCode"
+import {
+  renderCode as _renderCode,
+  renderSpan,
+  renderSelection,
+} from "./renderCode"
 import { movedSpans } from "./movedSpans"
 import throttle from "lodash/throttle"
+import memoize from "lodash/memoize"
+
+const tokenize = memoize(_tokenize)
+const renderCode = memoize(_renderCode)
 
 const WIDTH = 600
 const HEIGHT = 500
@@ -89,15 +97,36 @@ interface HistoryEntry {
   timestamp: number
 }
 
-export class Editor extends React.Component<
-  { text: string },
-  {
-    history: {
-      entries: HistoryEntry[]
-      offset: number
-    }
+interface MovedSpan {
+  type: "moved span"
+  newIndex: number
+  oldBoundingBox: ClientRect
+  text: string
+}
+
+interface EnteringSpan {
+  type: "entering span"
+  index: number
+  text: string
+}
+
+type SpanTransition = MovedSpan | EnteringSpan
+
+interface Props {
+  text: string
+}
+interface State {
+  history: {
+    entries: HistoryEntry[]
+    offset: number
   }
-> {
+}
+interface Snapshot {
+  spanTransitions: SpanTransition[]
+  cursorBoundingBox?: ClientRect
+}
+
+export class Editor extends React.Component<Props, State, Snapshot> {
   state = {
     history: {
       entries: [
@@ -271,41 +300,142 @@ export class Editor extends React.Component<
     { trailing: true },
   )
 
-  componentDidUpdate() {
-    if (this.moves && this.codeUnderlay && this.wrapperRef) {
-      const cursorBoundingBox = this.cursorBoundingBox
-      this.cursorBoundingBox = null
-      const moves = this.moves
-      this.moves = null
+  lastRenderedState: HistoryEntry = this.getCurrentState()
+  animateNextTransition: boolean = false
 
-      for (const { newIndex, text, oldBoundingBox } of moves) {
-        const child = this.codeUnderlay.children[newIndex] as HTMLSpanElement
+  getSnapshotBeforeUpdate() {
+    if (this.animateNextTransition && this.textArea && this.codeUnderlay) {
+      this.animateNextTransition = false
 
-        if (!child) {
-          console.error("what! Things don't line up :(")
-          return
+      const { text: oldText } = this.lastRenderedState
+      const { text: newText } = this.getCurrentState()
+
+      const oldSpans = renderCode(oldText, tokenize(oldText))
+      const newSpans = renderCode(newText, tokenize(newText))
+
+      const moves = movedSpans(oldSpans, newSpans)
+
+      const spanTransitions: SpanTransition[] = []
+
+      let i = 0
+      for (const { oldIndex, newIndex } of moves) {
+        while (i < newIndex) {
+          if (newSpans[i].text.trim() !== "") {
+            console.log("entering", newSpans[i].text)
+            spanTransitions.push({
+              type: "entering span",
+              index: i,
+              text: newSpans[i].text,
+            })
+          }
+          i++
+        }
+        i++
+
+        if (!this.codeUnderlay.children[oldIndex]) {
+          console.error("things don't match up", oldIndex, newIndex)
+          break
+        }
+        if (
+          this.codeUnderlay.children[oldIndex].textContent !==
+          oldSpans[oldIndex].text
+        ) {
+          console.error("things don't match up")
+          return null
         }
 
-        if (child.textContent !== text) {
-          console.error(
-            "wut!? text dont match :(",
-            JSON.stringify({ textContent: child.textContent, text }),
-          )
-          return
+        spanTransitions.push({
+          type: "moved span",
+          newIndex,
+          text: newSpans[newIndex].text,
+          oldBoundingBox: this.codeUnderlay.children[
+            oldIndex
+          ].getBoundingClientRect(),
+        })
+      }
+
+      const cursor = this.getCursor()
+      if (cursor) {
+        return {
+          spanTransitions,
+          cursorBoundingBox: cursor.getBoundingClientRect(),
         }
+      }
 
-        if (!(child instanceof HTMLSpanElement)) {
-          console.error("wut!? child not a span :(")
-          return
+      return { spanTransitions }
+    }
+    return null
+  }
+
+  componentDidUpdate(_prevProps: Props, _prevState: State, snapshot: Snapshot) {
+    this.lastRenderedState = this.getCurrentState()
+    if (snapshot !== null && this.codeUnderlay && this.wrapperRef) {
+      if (this.textArea) {
+        this.textArea.value = this.lastRenderedState.text
+        this.textArea.selectionStart = this.lastRenderedState.selectionStart
+        this.textArea.selectionEnd = this.lastRenderedState.selectionEnd
+      }
+      const { cursorBoundingBox, spanTransitions } = snapshot
+
+      for (const transition of spanTransitions) {
+        switch (transition.type) {
+          case "moved span":
+            {
+              const { newIndex, text, oldBoundingBox } = transition
+              const child = this.codeUnderlay.children[
+                newIndex
+              ] as HTMLSpanElement
+
+              if (!child) {
+                console.error("what! Things don't line up :(")
+                return
+              }
+
+              if (child.textContent !== text) {
+                console.error(
+                  "wut!? text dont match :(",
+                  JSON.stringify({ textContent: child.textContent, text }),
+                )
+                return
+              }
+
+              if (!(child instanceof HTMLSpanElement)) {
+                console.error("wut!? child not a span :(")
+                return
+              }
+
+              const { top, left } = diffBoundingBoxes(
+                oldBoundingBox,
+                child.getBoundingClientRect(),
+              )
+
+              child.style.transition = ``
+              if (top !== 0 || left !== 0) {
+                child.style.transform = `translate(${left}px, ${top}px)`
+              } else {
+                child.style.transform = ``
+              }
+            }
+            break
+          case "entering span":
+            {
+              const { index, text } = transition
+              console.log("yes entering", text)
+              if (text.trim() === "") {
+                break
+              }
+              const child = this.codeUnderlay.children[index] as HTMLSpanElement
+              if (!child) {
+                console.error("What! no child at given :(")
+                return
+              }
+
+              child.style.transition = ``
+              child.style.opacity = "0"
+              child.style.transform = `translateY(-20px)`
+            }
+            break
         }
-
-        const { top, left } = diffBoundingBoxes(
-          oldBoundingBox,
-          child.getBoundingClientRect(),
-        )
-
-        child.style.transition = ``
-        child.style.transform = `translate(${left}px, ${top}px)`
       }
 
       const cursor = this.getCursor()
@@ -348,18 +478,42 @@ export class Editor extends React.Component<
 
       this.transitionTimeout = setTimeout(() => {
         if (this.codeUnderlay) {
-          for (const { newIndex } of moves) {
-            const child = this.codeUnderlay.children[
-              newIndex
-            ] as HTMLSpanElement
-            if (!child) {
-              console.error("childs not the same as before :(")
-              continue
+          for (const transition of spanTransitions) {
+            switch (transition.type) {
+              case "moved span":
+                {
+                  const child = this.codeUnderlay.children[
+                    transition.newIndex
+                  ] as HTMLSpanElement
+                  if (!child) {
+                    console.error("childs not the same as before :(")
+                    continue
+                  }
+                  if (child.style.transform !== "") {
+                    child.style.transition = `transform 0.24s ease-out`
+                    child.style.transform = "translate(0px, 0px)"
+                  }
+                }
+                break
+              case "entering span": {
+                if (transition.text.trim() === "") {
+                  break
+                }
+                const child = this.codeUnderlay.children[
+                  transition.index
+                ] as HTMLSpanElement
+                if (!child) {
+                  console.error("childs not the same as before :(")
+                  continue
+                }
+                child.style.transition = `transform 0.24s ease-out, opacity 0.3s ease-out`
+                child.style.transform = "translateY(0px)"
+                child.style.opacity = "1"
+              }
             }
-            child.style.transition = `transform 0.24s ease-out`
-            child.style.transform = "translate(0px, 0px)"
           }
         }
+
         if (cursor) {
           cursor.style.transition = `transform 0.24s ease-out`
           cursor.style.transform = "translate(0px, 0px)"
@@ -379,45 +533,7 @@ export class Editor extends React.Component<
           this.getPrintWidth(),
         )
 
-        // TODO render this biz without the cursor. Or put the cursor at the start every time
-
-        const { text: oldText } = this.getCurrentState()
-
-        const oldSpans = renderCode(oldText, tokenize(oldText))
-
-        this.textArea.value = formatted
-        this.textArea.selectionStart = this.textArea.selectionEnd = cursorOffset
-
-        const newSpans = renderCode(formatted, tokenize(formatted))
-
-        const moved = movedSpans(oldSpans, newSpans)
-
-        const moves = []
-        for (const { oldIndex, newIndex } of moved) {
-          if (
-            this.codeUnderlay.children[oldIndex].textContent !==
-            oldSpans[oldIndex].text
-          ) {
-            console.error("things don't match up")
-            return
-          }
-
-          moves.push({
-            newIndex,
-            text: newSpans[newIndex].text,
-            oldBoundingBox: this.codeUnderlay.children[
-              oldIndex
-            ].getBoundingClientRect(),
-          })
-        }
-
-        this.moves = moves
-
-        const cursor = this.getCursor()
-        if (cursor) {
-          this.cursorBoundingBox = cursor.getBoundingClientRect()
-        }
-
+        this.animateNextTransition = true
         this.pushHistory({
           text: formatted,
           selectionStart: cursorOffset,
@@ -441,6 +557,7 @@ export class Editor extends React.Component<
           break
         case "z":
           ev.preventDefault()
+          this.animateNextTransition = true
           if (ev.shiftKey) {
             this.redo()
           } else {
@@ -452,6 +569,7 @@ export class Editor extends React.Component<
   }
 
   componentDidMount() {
+    this.lastRenderedState = this.getCurrentState()
     this.updateEditorSize()
     window.addEventListener("keydown", this.handleKeyDown)
     document.addEventListener("selectionchange", this.handleSelectionChange)
