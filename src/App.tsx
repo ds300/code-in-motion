@@ -126,18 +126,20 @@ const meta = bowser.mac ? "cmd" : "ctrl"
 const text = `// Hi! 👋
 // This is a tiny experiment in modern code editor design.
 //
-// It animates operations like format (${meta} + s),
-// undo (${meta} + z), and redo (${meta} + shift + z).
-// It also zooms out if a line becomes too long for a
-// second, rather than scrolling across and hiding code.
+// - It animates operations like format (${meta} + s),
+//   undo (${meta} + z), and redo (${meta} + shift + z), to help
+//   keep track of changes.
+// - It zooms out if a line momentarily becomes too long,
+//   rather than scrolling across and hiding code.
 //
-// Try it out and let me know what you think 👇
+// Pardon the jank, and let me know what you think 👇
 
 function giveMeMoreParametersAndHitSave(one, two, three) {
   console.log(\`one: \${one}, two: \${two}, three: \${three}\`)
 }
 
 console.log("This uses the FLIP animation technique 🤸")
+console.log("and Prettier for code cormatting ✨")
 
 type SupportedLanguages = "JavaScript" | "TypeScript"
 
