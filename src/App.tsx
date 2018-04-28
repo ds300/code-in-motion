@@ -124,46 +124,22 @@ injectGlobal`
 const meta = bowser.mac ? "cmd" : "ctrl"
 
 const text = `// Hi! 👋
+// This is a tiny experiment in modern code editor design.
 //
-// This is a toy text editor with two unique features:
+// It animates operations like format (${meta} + s),
+// undo (${meta} + z), and redo (${meta} + shift + z).
+// It also zooms out if a line becomes too long for a
+// second, rather than scrolling across and hiding code.
 //
-// - If lines grow too large, the editor zooms out
-//   rather than abruptly scrolling across.
-//
-// - Code formatting (using Prettier) and undo/redo are 
-//   animated, so you keep track of what moves where.
-//
-// Scroll down to try it out 👇👇
+// Try it out and let me know what you think 👇
 
-const supportedOperations = {
-  format: {
-    keyCommand: "${meta} + s",
-    description: "Run Prettier to format this code",
-  },
-  undo: {
-    keyCommand: "${meta} + z",
-    description: "Revert recent changes",
-  },
-  redo: {
-    keyCommand: "${meta} + shift + z",
-    description: "Re-apply changes that were undone",
-  },
+function giveMeMoreParametersAndHitSave(one, two, three) {
+  console.log(\`one: \${one}, two: \${two}, three: \${three}\`)
 }
 
-console.log("It uses the FLIP animation technique 🤸")
+console.log("This uses the FLIP animation technique 🤸")
 
 type SupportedLanguages = "JavaScript" | "TypeScript"
-
-function deleteSomeOfMyParameters(
-  one,
-  two,
-  three,
-  four,
-  five,
-  six
-) {
-  console.log(\`\${one} is the loneliest number\`)
-}
 
 // Have fun! 💃
 `
