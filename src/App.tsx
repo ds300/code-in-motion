@@ -139,7 +139,7 @@ function giveMeMoreParametersAndHitSave(one, two, three) {
 }
 
 console.log("This uses the FLIP animation technique 🤸")
-console.log("and Prettier for code cormatting ✨")
+console.log("and Prettier for code formatting ✨")
 
 type SupportedLanguages = "JavaScript" | "TypeScript"
 
