@@ -567,16 +567,37 @@ export class Editor extends React.Component<Props, State, Snapshot> {
     }
   }
 
+  selectionMonitorInterval: NodeJS.Timer | null = null
+
   componentDidMount() {
     this.lastRenderedState = this.getCurrentState()
     this.updateEditorSize()
     window.addEventListener("keydown", this.handleKeyDown)
-    document.addEventListener("selectionchange", this.handleSelectionChange)
+    this.selectionMonitorInterval = setInterval(
+      (() => {
+        let lastSelectionStart = 0
+        let lastSelectionEnd = 0
+        return () => {
+          if (
+            this.textArea &&
+            (this.textArea.selectionStart !== lastSelectionStart ||
+              this.textArea.selectionEnd !== lastSelectionEnd)
+          ) {
+            lastSelectionStart = this.textArea.selectionStart
+            lastSelectionEnd = this.textArea.selectionEnd
+            this.handleSelectionChange()
+          }
+        }
+      })(),
+      30,
+    )
   }
 
   componentWillUnmount() {
     window.removeEventListener("keydown", this.handleKeyDown)
-    document.removeEventListener("selectionchange", this.handleSelectionChange)
+    if (this.selectionMonitorInterval) {
+      clearInterval(this.selectionMonitorInterval)
+    }
   }
 
   wrapperRef: HTMLDivElement | null = null
