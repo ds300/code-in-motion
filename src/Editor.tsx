@@ -24,6 +24,8 @@ const H_PADDING = 20
 const ScaleWrapper = styled.div`
   transform-origin: top left;
   transition: transform 0.24s ease-out;
+  width: ${WIDTH}px;
+  height: ${HEIGHT}px;
 `
 const editorBox = css`
   position: absolute;
@@ -52,8 +54,7 @@ const EditorBoxWrapper = styled.div`
   max-width: ${WIDTH}px;
   max-height: ${HEIGHT}px;
   -ms-overflow-style: none;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  overflow: hidden;
   margin-bottom: 50px;
 `
 
@@ -342,7 +343,11 @@ export class Editor extends React.Component<Props, State, Snapshot> {
     return null
   }
 
-  componentDidUpdate(_prevProps: Props, _prevState: State, snapshot: Snapshot) {
+  componentDidUpdate(
+    _prevProps: Props,
+    _prevState: State,
+    snapshot?: Snapshot,
+  ) {
     this.lastRenderedState = this.getCurrentState()
     if (
       !this.codeUnderlay ||
@@ -373,7 +378,6 @@ export class Editor extends React.Component<Props, State, Snapshot> {
     }
 
     const transformMultiplier = snapshot.width / WIDTH
-    console.log({ transformMultiplier })
 
     if (this.textArea) {
       this.textArea.value = this.lastRenderedState.text
@@ -427,7 +431,6 @@ export class Editor extends React.Component<Props, State, Snapshot> {
         case "entering span":
           {
             const { index, text } = transition
-            console.log("yes entering", text)
             if (text.trim() === "") {
               break
             }
@@ -577,6 +580,8 @@ export class Editor extends React.Component<Props, State, Snapshot> {
   selectionMonitorInterval: NodeJS.Timer | null = null
 
   componentDidMount() {
+    this._applyCurrentState()
+    this.componentDidUpdate(this.props, this.state)
     this.lastRenderedState = this.getCurrentState()
     window.addEventListener("keydown", this.handleKeyDown)
     this.selectionMonitorInterval = setInterval(
@@ -597,6 +602,16 @@ export class Editor extends React.Component<Props, State, Snapshot> {
       })(),
       30,
     )
+    window.onmousewheel = this.onMouseWheel
+  }
+
+  onMouseWheel = (ev: WheelEvent) => {
+    if (ev.target === this.textArea && this.wrapperRef) {
+      ev.preventDefault()
+      this.wrapperRef.scrollBy({
+        top: ev.deltaY,
+      })
+    }
   }
 
   componentWillUnmount() {
@@ -615,10 +630,11 @@ export class Editor extends React.Component<Props, State, Snapshot> {
     return (
       <EditorWrapper>
         <EditorBoxWrapper
+          id="wrapper"
           onScroll={ev => (ev.currentTarget.scrollLeft = 0)}
           innerRef={ref => (this.wrapperRef = ref)}
         >
-          <ScaleWrapper innerRef={ref => (this.scaleRef = ref)}>
+          <ScaleWrapper id="scaler" innerRef={ref => (this.scaleRef = ref)}>
             <SelectionUnderlay innerRef={ref => (this.selectionUnderlay = ref)}>
               {renderSelection(
                 text,
