@@ -625,6 +625,7 @@ export class Editor extends React.Component<Props, State, Snapshot> {
             {renderCode(text, tokenize(text)).map(renderSpan)}
           </CodeUnderlay>
           <TextArea
+            data-gramm_editor="false"
             onInput={this.setNewText}
             onKeyDown={ev => {
               if (ev.key === "Tab" && this.textArea) {
