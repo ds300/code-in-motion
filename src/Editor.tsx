@@ -12,7 +12,6 @@ import {
   renderSelection,
 } from "./renderCode"
 import { movedSpans } from "./movedSpans"
-import throttle from "lodash/throttle"
 import memoize from "lodash/memoize"
 
 const tokenize = memoize(_tokenize)
@@ -22,14 +21,16 @@ const WIDTH = 600
 const HEIGHT = 500
 const H_PADDING = 20
 
-const editorBox = css`
+const ScaleWrapper = styled.div`
+  transform-origin: top left;
   transition: transform 0.24s ease-out;
+`
+const editorBox = css`
   position: absolute;
   top: 0;
   left: 0;
   min-width: ${WIDTH}px;
   min-height: ${HEIGHT}px;
-  transform-origin: top left;
   padding: 20px ${H_PADDING}px;
   margin: 0;
   white-space: pre;
@@ -128,6 +129,7 @@ interface State {
 interface Snapshot {
   spanTransitions: SpanTransition[]
   cursorBoundingBox?: ClientRect
+  width: number
 }
 
 export class Editor extends React.Component<Props, State, Snapshot> {
@@ -272,33 +274,6 @@ export class Editor extends React.Component<Props, State, Snapshot> {
 
   transitionTimeout: NodeJS.Timer | null = null
 
-  updateEditorSize = throttle(
-    () => {
-      if (this.codeUnderlay && this.textArea && this.selectionUnderlay) {
-        const actualWidth = this.codeUnderlay.offsetWidth
-        const actualHeight = this.codeUnderlay.offsetHeight
-
-        // +1 px for weird safari issue where fonts don't render the same
-        // in text area
-        this.textArea.style.width = actualWidth + 1 + "px"
-        this.textArea.style.height = actualHeight + HEIGHT + "px"
-
-        const ratio = WIDTH / actualWidth
-
-        const transform = `scale(${ratio})`
-        this.codeUnderlay.style.transform = transform
-        this.selectionUnderlay.style.transform = transform
-        this.textArea.style.transform = transform
-
-        if (this.codeUnderlay.parentElement) {
-          this.codeUnderlay.parentElement.scrollLeft = 0
-        }
-      }
-    },
-    120,
-    { trailing: true },
-  )
-
   lastRenderedState: HistoryEntry = this.getCurrentState()
   animateNextTransition: boolean = false
 
@@ -357,169 +332,201 @@ export class Editor extends React.Component<Props, State, Snapshot> {
       if (cursor) {
         return {
           spanTransitions,
+          width: this.codeUnderlay.offsetWidth,
           cursorBoundingBox: cursor.getBoundingClientRect(),
         }
       }
 
-      return { spanTransitions }
+      return { spanTransitions, width: this.codeUnderlay.offsetWidth }
     }
     return null
   }
 
   componentDidUpdate(_prevProps: Props, _prevState: State, snapshot: Snapshot) {
     this.lastRenderedState = this.getCurrentState()
-    if (snapshot !== null && this.codeUnderlay && this.wrapperRef) {
-      if (this.textArea) {
-        this.textArea.value = this.lastRenderedState.text
-        this.textArea.selectionStart = this.lastRenderedState.selectionStart
-        this.textArea.selectionEnd = this.lastRenderedState.selectionEnd
-      }
-      const { cursorBoundingBox, spanTransitions } = snapshot
+    if (
+      !this.codeUnderlay ||
+      !this.wrapperRef ||
+      !this.textArea ||
+      !this.selectionUnderlay ||
+      !this.scaleRef
+    ) {
+      return
+    }
 
-      for (const transition of spanTransitions) {
-        switch (transition.type) {
-          case "moved span":
-            {
-              const { newIndex, text, oldBoundingBox } = transition
-              const child = this.codeUnderlay.children[
-                newIndex
-              ] as HTMLSpanElement
+    const actualWidth = this.codeUnderlay.offsetWidth
+    const actualHeight = this.codeUnderlay.offsetHeight
 
-              if (!child) {
-                console.error("what! Things don't line up :(")
-                return
-              }
+    // +1 px for weird safari issue where fonts don't render the same
+    // in text area
+    this.textArea.style.width = actualWidth + 1 + "px"
+    this.textArea.style.height = actualHeight + HEIGHT + "px"
 
-              if (child.textContent !== text) {
-                console.error(
-                  "wut!? text dont match :(",
-                  JSON.stringify({ textContent: child.textContent, text }),
-                )
-                return
-              }
+    const ratio = WIDTH / actualWidth
 
-              if (!(child instanceof HTMLSpanElement)) {
-                console.error("wut!? child not a span :(")
-                return
-              }
+    this.scaleRef.style.transform = `scale(${ratio})`
 
-              const { top, left } = diffBoundingBoxes(
-                oldBoundingBox,
-                child.getBoundingClientRect(),
+    this.wrapperRef.scrollLeft = 0
+
+    if (!snapshot) {
+      return
+    }
+
+    const transformMultiplier = snapshot.width / WIDTH
+    console.log({ transformMultiplier })
+
+    if (this.textArea) {
+      this.textArea.value = this.lastRenderedState.text
+      this.textArea.selectionStart = this.lastRenderedState.selectionStart
+      this.textArea.selectionEnd = this.lastRenderedState.selectionEnd
+    }
+    const { cursorBoundingBox, spanTransitions } = snapshot
+
+    for (const transition of spanTransitions) {
+      switch (transition.type) {
+        case "moved span":
+          {
+            const { newIndex, text, oldBoundingBox } = transition
+            const child = this.codeUnderlay.children[
+              newIndex
+            ] as HTMLSpanElement
+
+            if (!child) {
+              console.error("what! Things don't line up :(")
+              return
+            }
+
+            if (child.textContent !== text) {
+              console.error(
+                "wut!? text dont match :(",
+                JSON.stringify({ textContent: child.textContent, text }),
               )
-
-              child.style.transition = ``
-              if (top !== 0 || left !== 0) {
-                child.style.transform = `translate(${left}px, ${top}px)`
-              } else {
-                child.style.transform = ``
-              }
+              return
             }
-            break
-          case "entering span":
-            {
-              const { index, text } = transition
-              console.log("yes entering", text)
-              if (text.trim() === "") {
-                break
-              }
-              const child = this.codeUnderlay.children[index] as HTMLSpanElement
-              if (!child) {
-                console.error("What! no child at given :(")
-                return
-              }
 
-              child.style.transition = ``
-              child.style.opacity = "0"
-              child.style.transform = `translateY(-20px)`
+            if (!(child instanceof HTMLSpanElement)) {
+              console.error("wut!? child not a span :(")
+              return
             }
-            break
-        }
+
+            const { top, left } = diffBoundingBoxes(
+              oldBoundingBox,
+              child.getBoundingClientRect(),
+            )
+
+            child.style.transition = ``
+            if (top !== 0 || left !== 0) {
+              console.log({ top, left })
+              child.style.transform = `translate(${left *
+                transformMultiplier}px, ${top * transformMultiplier}px)`
+            } else {
+              child.style.transform = ``
+            }
+          }
+          break
+        case "entering span":
+          {
+            const { index, text } = transition
+            console.log("yes entering", text)
+            if (text.trim() === "") {
+              break
+            }
+            const child = this.codeUnderlay.children[index] as HTMLSpanElement
+            if (!child) {
+              console.error("What! no child at given :(")
+              return
+            }
+
+            child.style.transition = ``
+            child.style.opacity = "0"
+            child.style.transform = `translateY(-20px)`
+          }
+          break
       }
+    }
 
-      const cursor = this.getCursor()
-      if (cursorBoundingBox && cursor) {
-        const newCursorBoundingBox = cursor.getBoundingClientRect()
-        const { top, left } = diffBoundingBoxes(
-          cursorBoundingBox,
-          newCursorBoundingBox,
-        )
-        cursor.style.transition = ``
-        cursor.style.transform = `translate(${left}px, ${top}px)`
+    const cursor = this.getCursor()
+    if (cursorBoundingBox && cursor) {
+      const newCursorBoundingBox = cursor.getBoundingClientRect()
+      const { top, left } = diffBoundingBoxes(
+        cursorBoundingBox,
+        newCursorBoundingBox,
+      )
+      cursor.style.transition = ``
+      cursor.style.transform = `translate(${left *
+        transformMultiplier}px, ${top * transformMultiplier}px)`
 
-        const wrapperBoundingBox = this.wrapperRef.getBoundingClientRect()
+      const wrapperBoundingBox = this.wrapperRef.getBoundingClientRect()
 
-        const bottomDiff =
-          newCursorBoundingBox.top +
-          newCursorBoundingBox.height -
-          (wrapperBoundingBox.top + wrapperBoundingBox.height)
+      const bottomDiff =
+        newCursorBoundingBox.top +
+        newCursorBoundingBox.height -
+        (wrapperBoundingBox.top + wrapperBoundingBox.height)
 
-        if (bottomDiff > 0) {
-          // cursor is too low
-          this.wrapperRef.scrollBy({
-            top: bottomDiff + 100,
-            behavior: "smooth",
-          })
-        } else if (newCursorBoundingBox.top < wrapperBoundingBox.top) {
-          // cursor is too high
-          const diff = wrapperBoundingBox.top - newCursorBoundingBox.top
-          // scroll up
-          this.wrapperRef.scrollBy({
-            top: -(diff + 100),
-            behavior: "smooth",
-          })
-        }
+      if (bottomDiff > 0) {
+        // cursor is too low
+        this.wrapperRef.scrollBy({
+          top: bottomDiff + 100,
+          behavior: "smooth",
+        })
+      } else if (newCursorBoundingBox.top < wrapperBoundingBox.top) {
+        // cursor is too high
+        const diff = wrapperBoundingBox.top - newCursorBoundingBox.top
+        // scroll up
+        this.wrapperRef.scrollBy({
+          top: -(diff + 100),
+          behavior: "smooth",
+        })
       }
+    }
 
-      if (this.transitionTimeout) {
-        clearTimeout(this.transitionTimeout)
-      }
+    if (this.transitionTimeout) {
+      clearTimeout(this.transitionTimeout)
+    }
 
-      this.transitionTimeout = setTimeout(() => {
-        if (this.codeUnderlay) {
-          for (const transition of spanTransitions) {
-            switch (transition.type) {
-              case "moved span":
-                {
-                  const child = this.codeUnderlay.children[
-                    transition.newIndex
-                  ] as HTMLSpanElement
-                  if (!child) {
-                    console.error("childs not the same as before :(")
-                    continue
-                  }
-                  if (child.style.transform !== "") {
-                    child.style.transition = `transform 0.24s ease-out`
-                    child.style.transform = "translate(0px, 0px)"
-                  }
-                }
-                break
-              case "entering span": {
-                if (transition.text.trim() === "") {
-                  break
-                }
+    this.transitionTimeout = setTimeout(() => {
+      if (this.codeUnderlay) {
+        for (const transition of spanTransitions) {
+          switch (transition.type) {
+            case "moved span":
+              {
                 const child = this.codeUnderlay.children[
-                  transition.index
+                  transition.newIndex
                 ] as HTMLSpanElement
                 if (!child) {
                   console.error("childs not the same as before :(")
                   continue
                 }
-                child.style.transition = `transform 0.20s ease-out, opacity 0.3s ease-out`
-                child.style.transform = "translateY(0px)"
-                child.style.opacity = "1"
+                if (child.style.transform !== "") {
+                  child.style.transition = `transform 0.24s ease-in-out`
+                  child.style.transform = "translate(0px, 0px)"
+                }
               }
+              break
+            case "entering span": {
+              if (transition.text.trim() === "") {
+                break
+              }
+              const child = this.codeUnderlay.children[
+                transition.index
+              ] as HTMLSpanElement
+              if (!child) {
+                console.error("childs not the same as before :(")
+                continue
+              }
+              child.style.transition = `transform 0.20s ease-out, opacity 0.3s ease-out`
+              child.style.transform = "translateY(0px)"
+              child.style.opacity = "1"
             }
           }
         }
+      }
 
-        if (cursor) {
-          cursor.style.transition = `transform 0.24s ease-out`
-          cursor.style.transform = "translate(0px, 0px)"
-        }
-      }, 30)
-    }
-    this.updateEditorSize()
+      if (cursor) {
+        cursor.style.transition = `transform 0.24s ease-in-out`
+        cursor.style.transform = "translate(0px, 0px)"
+      }
+    }, 30)
   }
 
   runPrettier = async () => {
@@ -571,7 +578,6 @@ export class Editor extends React.Component<Props, State, Snapshot> {
 
   componentDidMount() {
     this.lastRenderedState = this.getCurrentState()
-    this.updateEditorSize()
     window.addEventListener("keydown", this.handleKeyDown)
     this.selectionMonitorInterval = setInterval(
       (() => {
@@ -601,6 +607,7 @@ export class Editor extends React.Component<Props, State, Snapshot> {
   }
 
   wrapperRef: HTMLDivElement | null = null
+  scaleRef: HTMLDivElement | null = null
 
   render() {
     const { text, selectionStart, selectionEnd } = this.getCurrentState()
@@ -611,43 +618,45 @@ export class Editor extends React.Component<Props, State, Snapshot> {
           onScroll={ev => (ev.currentTarget.scrollLeft = 0)}
           innerRef={ref => (this.wrapperRef = ref)}
         >
-          <SelectionUnderlay innerRef={ref => (this.selectionUnderlay = ref)}>
-            {renderSelection(
-              text,
-              tokenize(text),
-              selectionStart,
-              selectionEnd,
-            ).map(({ className, text }) => (
-              <span className={className}>{text}</span>
-            ))}
-          </SelectionUnderlay>
-          <CodeUnderlay innerRef={ref => (this.codeUnderlay = ref)}>
-            {renderCode(text, tokenize(text)).map(renderSpan)}
-          </CodeUnderlay>
-          <TextArea
-            data-gramm_editor="false"
-            onInput={this.setNewText}
-            onKeyDown={ev => {
-              if (ev.key === "Tab" && this.textArea) {
-                ev.preventDefault()
-                const startPos = this.textArea.selectionStart
-                const endPos = this.textArea.selectionEnd
+          <ScaleWrapper innerRef={ref => (this.scaleRef = ref)}>
+            <SelectionUnderlay innerRef={ref => (this.selectionUnderlay = ref)}>
+              {renderSelection(
+                text,
+                tokenize(text),
+                selectionStart,
+                selectionEnd,
+              ).map(({ className, text }) => (
+                <span className={className}>{text}</span>
+              ))}
+            </SelectionUnderlay>
+            <CodeUnderlay innerRef={ref => (this.codeUnderlay = ref)}>
+              {renderCode(text, tokenize(text)).map(renderSpan)}
+            </CodeUnderlay>
+            <TextArea
+              data-gramm_editor="false"
+              onInput={this.setNewText}
+              onKeyDown={ev => {
+                if (ev.key === "Tab" && this.textArea) {
+                  ev.preventDefault()
+                  const startPos = this.textArea.selectionStart
+                  const endPos = this.textArea.selectionEnd
 
-                const newText =
-                  this.textArea.value.slice(0, startPos) +
-                  "  " +
-                  this.textArea.value.slice(endPos)
-                this.textArea.value = newText
-                this.textArea.selectionStart = startPos + 2
-                this.textArea.selectionEnd = startPos + 2
-                this.setNewText(ev)
-              }
-            }}
-            defaultValue={text}
-            innerRef={ref => {
-              this.textArea = ref
-            }}
-          />
+                  const newText =
+                    this.textArea.value.slice(0, startPos) +
+                    "  " +
+                    this.textArea.value.slice(endPos)
+                  this.textArea.value = newText
+                  this.textArea.selectionStart = startPos + 2
+                  this.textArea.selectionEnd = startPos + 2
+                  this.setNewText(ev)
+                }
+              }}
+              defaultValue={text}
+              innerRef={ref => {
+                this.textArea = ref
+              }}
+            />
+          </ScaleWrapper>
         </EditorBoxWrapper>
       </EditorWrapper>
     )
