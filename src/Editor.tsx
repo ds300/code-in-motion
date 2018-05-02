@@ -612,10 +612,10 @@ export class Editor extends React.Component<Props, State, Snapshot> {
       })(),
       30,
     )
-    window.onmousewheel = this.onMouseWheel
+    window.onwheel = this.onwheel
   }
 
-  onMouseWheel = (ev: WheelEvent) => {
+  onwheel = (ev: WheelEvent) => {
     if (ev.target === this.textArea && this.wrapperRef) {
       ev.preventDefault()
       this.wrapperRef.scrollBy({
