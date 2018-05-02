@@ -21,6 +21,14 @@ const WIDTH = 600
 const HEIGHT = 500
 const H_PADDING = 20
 
+const ScrollBar = styled.div`
+  position: absolute;
+  right: 4px;
+  width: 5px;
+  border-radius: 2.5px;
+  background-color: rgba(255, 255, 255, 0.13);
+`
+
 const ScaleWrapper = styled.div`
   transform-origin: top left;
   transition: transform 0.24s ease-out;
@@ -356,6 +364,7 @@ export class Editor extends React.Component<Props, State, Snapshot> {
       !this.selectionUnderlay ||
       !this.scaleRef
     ) {
+      // not expecting this to ever happen
       return
     }
 
@@ -373,6 +382,7 @@ export class Editor extends React.Component<Props, State, Snapshot> {
 
     this.wrapperRef.scrollLeft = 0
 
+    this.positionScrollBar()
     if (!snapshot) {
       return
     }
@@ -621,8 +631,21 @@ export class Editor extends React.Component<Props, State, Snapshot> {
     }
   }
 
+  positionScrollBar() {
+    const H = HEIGHT - 8
+    if (this.scrollBarRef && this.wrapperRef) {
+      const visibleRatio = HEIGHT / this.wrapperRef.scrollHeight
+      const scrollBarHeight = Math.max(H * visibleRatio) - 4
+      const scrollBarTop = 4 + this.wrapperRef.scrollTop * visibleRatio
+      this.scrollBarRef.style.height = scrollBarHeight + "px"
+      this.scrollBarRef.style.top =
+        this.wrapperRef.scrollTop + scrollBarTop + "px"
+    }
+  }
+
   wrapperRef: HTMLDivElement | null = null
   scaleRef: HTMLDivElement | null = null
+  scrollBarRef: HTMLDivElement | null = null
 
   render() {
     const { text, selectionStart, selectionEnd } = this.getCurrentState()
@@ -631,7 +654,10 @@ export class Editor extends React.Component<Props, State, Snapshot> {
       <EditorWrapper>
         <EditorBoxWrapper
           id="wrapper"
-          onScroll={ev => (ev.currentTarget.scrollLeft = 0)}
+          onScroll={ev => {
+            ev.currentTarget.scrollLeft = 0
+            this.positionScrollBar()
+          }}
           innerRef={ref => (this.wrapperRef = ref)}
         >
           <ScaleWrapper id="scaler" innerRef={ref => (this.scaleRef = ref)}>
@@ -673,6 +699,7 @@ export class Editor extends React.Component<Props, State, Snapshot> {
               }}
             />
           </ScaleWrapper>
+          <ScrollBar innerRef={ref => (this.scrollBarRef = ref)} />
         </EditorBoxWrapper>
       </EditorWrapper>
     )
